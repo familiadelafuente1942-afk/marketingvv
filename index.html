@@ -1089,16 +1089,49 @@ function LandingDeco() {
 }
 
 // ═══════════════════════ SITIO (rutea landing pública / centro interno) ═══════════════════════
+function SelectorApp({ activo, onCambiar }) {
+  const opciones = [
+    { id: "vv", label: "V+V Construcciones" },
+    { id: "deco", label: "VIP Deco & Home" },
+    { id: "operaciones", label: "Centro de Operaciones" }
+  ];
+  return (
+    <div style={{ position: "sticky", top: 0, zIndex: 100, background: "#0D1420", padding: "9px 14px", display: "flex", gap: 6, overflowX: "auto" }}>
+      {opciones.map(o => (
+        <button key={o.id} onClick={() => onCambiar(o.id)} style={{
+          border: "none", borderRadius: 20, padding: "7px 14px", fontSize: 11.5, fontWeight: 700, whiteSpace: "nowrap", cursor: "pointer",
+          background: activo === o.id ? BRASS : "transparent", color: activo === o.id ? "#fff" : "#B7BFCC"
+        }}>{o.label}</button>
+      ))}
+    </div>
+  );
+}
+
+const MAPA_RUTA = { "": "vv", "#deco": "deco", "#operaciones": "operaciones" };
+
 function Sitio() {
-  const [ruta, setRuta] = useState(window.location.hash);
+  const [vista, setVista] = useState(MAPA_RUTA[window.location.hash] || "vv");
+
+  function irA(id) {
+    setVista(id);
+    const hash = id === "vv" ? "" : "#" + id;
+    try { window.history.replaceState(null, "", window.location.pathname + hash); } catch (e) {}
+  }
+
   useEffect(() => {
-    const f = () => setRuta(window.location.hash);
+    const f = () => setVista(MAPA_RUTA[window.location.hash] || "vv");
     window.addEventListener("hashchange", f);
     return () => window.removeEventListener("hashchange", f);
   }, []);
-  if (ruta === "#operaciones") return <CentroOperaciones />;
-  if (ruta === "#deco") return <LandingDeco />;
-  return <Landing />;
+
+  return (
+    <div>
+      <SelectorApp activo={vista} onCambiar={irA} />
+      {vista === "vv" && <Landing />}
+      {vista === "deco" && <LandingDeco />}
+      {vista === "operaciones" && <CentroOperaciones />}
+    </div>
+  );
 }
 
 // ═══════════════════════ CONTENEDOR ═══════════════════════
