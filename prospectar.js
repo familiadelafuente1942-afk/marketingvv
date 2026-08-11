@@ -46,7 +46,7 @@ Si no encontrás algún dato para una empresa, dejá ese campo como cadena vací
         model: "claude-sonnet-5",
         max_tokens: 3500,
         messages: [{ role: "user", content: prompt }],
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 12 }]
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }]
       })
     });
 
