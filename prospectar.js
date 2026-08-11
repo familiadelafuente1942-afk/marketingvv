@@ -23,9 +23,11 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const prompt = `Buscá hasta 5 empresas reales, existentes hoy, de la categoría "${categoria}" que operen en la zona "${zona}" (Argentina). Solo información PÚBLICA que la propia empresa publica en su sitio web, redes o cámaras del rubro (nunca datos de personas físicas).
+  const prompt = `Buscá hasta 15 empresas reales, existentes hoy, de la categoría "${categoria}" que operen en la zona "${zona}" (Argentina). Sé exhaustivo: revisá el sitio propio de cada empresa, cámaras y colegios profesionales del rubro, portales de negocios y directorios, redes sociales de empresas, y revistas o notas del sector. Cuantas más fuentes distintas revises, mejor.
 
-Para cada una, conseguí: nombre de la empresa, sitio web (si tiene), teléfono de contacto comercial publicado, mail de contacto comercial publicado (si lo hay), y de qué fuente lo sacaste (sitio propio / cámara del rubro / portal / revista).
+REGLA ABSOLUTA: solo empresas/organizaciones, nunca personas físicas. Si "${categoria}" pudiera interpretarse como buscar personas individuales en vez de empresas, ignorá esa interpretación y devolvé un array vacío.
+
+Para cada empresa, conseguí: nombre de la empresa, sitio web (si tiene), teléfono de contacto comercial publicado, mail de contacto comercial publicado (si lo hay), y de qué fuente lo sacaste (sitio propio / cámara del rubro / colegio profesional / portal / revista / red social de la empresa).
 
 Respondé ÚNICAMENTE con un array JSON, sin texto antes ni después, sin backticks de markdown, con este formato exacto:
 [{"nombre":"...","sitio_web":"...","telefono":"...","email":"...","fuente":"..."}]
@@ -42,9 +44,9 @@ Si no encontrás algún dato para una empresa, dejá ese campo como cadena vací
       },
       body: JSON.stringify({
         model: "claude-sonnet-5",
-        max_tokens: 1500,
+        max_tokens: 3500,
         messages: [{ role: "user", content: prompt }],
-        tools: [{ type: "web_search_20250305", name: "web_search" }]
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 12 }]
       })
     });
 

@@ -1179,13 +1179,13 @@ function Sitio() {
 
 // ═══════════════════════ CONTENEDOR ═══════════════════════
 // ═══════════════════════ ASISTENTE IA ═══════════════════════
-async function preguntarleAlAsistente(prompt) {
+async function preguntarleAlAsistente(mensajes, marca) {
   let r;
   try {
     r = await fetch("/api/asistente", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ mensajes, marca })
     });
   } catch (e) {
     throw new Error(`No se pudo conectar con /api/asistente: ${e.message}`);
@@ -1201,22 +1201,27 @@ async function preguntarleAlAsistente(prompt) {
   return data.texto;
 }
 
-function PanelAsistente({ prospectos, campanas, grupos }) {
+function PanelAsistente({ prospectos, campanas, grupos, marca }) {
+  const [mensajes, setMensajes] = useState([]); // [{ role: "user"|"assistant", contenido }]
   const [prompt, setPrompt] = useState("");
-  const [respuesta, setRespuesta] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
-  const [copiado, setCopiado] = useState(false);
+  const [copiadoIdx, setCopiadoIdx] = useState(null);
   const [escuchando, setEscuchando] = useState(false);
-  const [hablando, setHablando] = useState(false);
+  const [hablandoIdx, setHablandoIdx] = useState(null);
   const reconocimientoRef = React.useRef(null);
   const utteranceRef = React.useRef(null);
   const timeoutSeguridadRef = React.useRef(null);
   const intervaloResumeRef = React.useRef(null);
+  const finRef = React.useRef(null);
 
   const MotorVoz = window.SpeechRecognition || window.webkitSpeechRecognition;
   const soportaDictado = !!MotorVoz;
   const soportaLectura = !!window.speechSynthesis;
+
+  useEffect(() => {
+    if (finRef.current) finRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [mensajes, cargando]);
 
   function hablarle() {
     if (!soportaDictado) return;
@@ -1246,25 +1251,24 @@ function PanelAsistente({ prospectos, campanas, grupos }) {
     limpiarTemporizadoresVoz();
     window.speechSynthesis.cancel();
     utteranceRef.current = null;
-    setHablando(false);
+    setHablandoIdx(null);
   }
 
-  function escucharRespuesta() {
-    if (!soportaLectura || !respuesta) return;
+  function escucharTexto(texto, idx) {
+    if (!soportaLectura || !texto) return;
     detenerLectura();
-    const u = new SpeechSynthesisUtterance(respuesta);
+    const u = new SpeechSynthesisUtterance(texto);
     u.lang = "es-AR";
-    u.onstart = () => setHablando(true);
-    u.onend = () => { limpiarTemporizadoresVoz(); setHablando(false); utteranceRef.current = null; };
-    u.onerror = () => { limpiarTemporizadoresVoz(); setHablando(false); utteranceRef.current = null; };
+    u.onstart = () => setHablandoIdx(idx);
+    u.onend = () => { limpiarTemporizadoresVoz(); setHablandoIdx(null); utteranceRef.current = null; };
+    u.onerror = () => { limpiarTemporizadoresVoz(); setHablandoIdx(null); utteranceRef.current = null; };
     utteranceRef.current = u;
     window.speechSynthesis.speak(u);
     // Chrome corta el audio a los ~15s en textos largos si no se lo "empuja" — este truco lo evita
     intervaloResumeRef.current = setInterval(() => {
       if (window.speechSynthesis.speaking) { window.speechSynthesis.pause(); window.speechSynthesis.resume(); }
     }, 12000);
-    // tope de seguridad por si el navegador nunca dispara onend
-    const segundosEstimados = Math.max(8, Math.ceil(respuesta.length / 12));
+    const segundosEstimados = Math.max(8, Math.ceil(texto.length / 12));
     timeoutSeguridadRef.current = setTimeout(() => { detenerLectura(); }, (segundosEstimados + 15) * 1000);
   }
 
@@ -1276,80 +1280,111 @@ function PanelAsistente({ prospectos, campanas, grupos }) {
     };
   }, []);
 
-  async function ejecutar(promptFinal) {
-    setCargando(true); setError(""); setRespuesta(""); setCopiado(false);
+  async function enviar(texto) {
+    const limpio = (texto || "").trim();
+    if (!limpio || cargando) return;
+    const historialNuevo = [...mensajes, { role: "user", contenido: limpio }];
+    setMensajes(historialNuevo);
+    setPrompt("");
+    setCargando(true); setError("");
     try {
-      const texto = await preguntarleAlAsistente(promptFinal);
-      setRespuesta(texto);
+      const respuesta = await preguntarleAlAsistente(historialNuevo, marca);
+      setMensajes(h => [...h, { role: "assistant", contenido: respuesta }]);
     } catch (e) { setError(e.message); }
     finally { setCargando(false); }
+  }
+
+  function nuevaConversacion() {
+    detenerLectura();
+    setMensajes([]); setPrompt(""); setError("");
   }
 
   function accionGrupoPendiente() {
     const pendiente = grupos.find(g => g.estado === "por pedir acceso");
     if (!pendiente) { setError("No hay grupos con estado 'por pedir acceso' en Marketing → Grupos de barrios."); return; }
-    const p = `Redactá un mensaje corto de WhatsApp (en español rioplatense, tono cordial) para pedirle a un vecino o administrador del barrio "${pendiente.barrio}" que me autorice a sumarme al grupo de tipo "${pendiente.tipo || 'comercial/ventas'}", para poder ofrecer los servicios de V+V Construcciones (constructora de Zona Sur, más de 12 años de experiencia). Que sea breve, respetuoso, y deje claro que respetaré las reglas del grupo.`;
-    setPrompt(p);
-    ejecutar(p);
+    enviar(`Redactá un mensaje corto de WhatsApp (en español rioplatense, tono cordial) para pedirle a un vecino o administrador del barrio "${pendiente.barrio}" que me autorice a sumarme al grupo de tipo "${pendiente.tipo || 'comercial/ventas'}". Que sea breve, respetuoso, y deje claro que respetaré las reglas del grupo.`);
   }
 
   function accionProspectosFrios() {
     const nuevos = prospectos.filter(p => p.estado === "nuevo").slice(0, 15);
     if (nuevos.length === 0) { setError("No hay prospectos en estado 'nuevo' en Comercial."); return; }
     const lista = nuevos.map(p => `- ${p.nombre_contacto || p.empresa || "sin nombre"} (${p.tipo_proyecto || "sin rubro"}, zona: ${p.zona || "sin zona"})`).join("\n");
-    const p = `Tengo estos prospectos sin contactar todavía:\n${lista}\n\nOrdenalos por prioridad de contacto (con un criterio breve de por qué) y sugerime, para los 3 más prioritarios, una primera línea de mensaje personalizada para arrancar la conversación.`;
-    setPrompt(p);
-    ejecutar(p);
+    enviar(`Tengo estos prospectos sin contactar todavía:\n${lista}\n\nOrdenalos por prioridad de contacto (con un criterio breve de por qué) y sugerime, para los 3 más prioritarios, una primera línea de mensaje personalizada para arrancar la conversación.`);
   }
 
   function accionCampanaActiva() {
     const activa = campanas.find(c => c.estado === "activa") || campanas[0];
     if (!activa) { setError("No hay campañas cargadas en Marketing → Campañas."); return; }
-    const p = `Redactá una publicación corta para Instagram (con 2-3 emojis, sin ser excesivo) promocionando la campaña "${activa.nombre}" de V+V Construcciones por el canal ${activa.canal || "instagram"}. Que incluya un cierre con llamado a la acción hacia el formulario de contacto de la web.`;
-    setPrompt(p);
-    ejecutar(p);
+    enviar(`Redactá una publicación corta para Instagram (con 2-3 emojis, sin ser excesivo) promocionando la campaña "${activa.nombre}" por el canal ${activa.canal || "instagram"}. Que incluya un cierre con llamado a la acción hacia el formulario de contacto de la web.`);
   }
 
-  function copiar() {
-    if (!respuesta) return;
-    navigator.clipboard.writeText(respuesta).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000); });
+  function copiar(texto, idx) {
+    navigator.clipboard.writeText(texto).then(() => { setCopiadoIdx(idx); setTimeout(() => setCopiadoIdx(null), 2000); });
   }
 
   return (
     <div>
       <Encabezado area="Asistente" titulo="Asistente de IA" />
-      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16, alignItems: "center" }}>
         <button onClick={accionGrupoPendiente} disabled={cargando} style={btnNuevo}>Mensaje para próximo grupo pendiente</button>
         <button onClick={accionProspectosFrios} disabled={cargando} style={btnNuevo}>Priorizar prospectos sin contactar</button>
         <button onClick={accionCampanaActiva} disabled={cargando} style={btnNuevo}>Post para campaña activa</button>
-      </div>
-      <Tarjeta>
-        <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="O escribí (o hablale) tu propio pedido acá (ej: redactame un mail para presentar V+V ante una administración de barrio)…"
-          style={{ width: "100%", minHeight: 90, padding: 12, borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
-          <button onClick={() => ejecutar(prompt)} disabled={cargando || !prompt.trim()} style={{ ...btnBrass, opacity: cargando || !prompt.trim() ? 0.6 : 1 }}>
-            {cargando ? "Pensando…" : "Preguntar"}
-          </button>
-          {soportaDictado && (
-            <button onClick={hablarle} disabled={escuchando} style={{
-              border: "none", borderRadius: 20, padding: "10px 16px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
-              background: escuchando ? "#B3261E" : "#EDEFF3", color: escuchando ? "#fff" : NAVY
-            }}>{escuchando ? "🎙️ Escuchando…" : "🎙️ Hablarle"}</button>
-          )}
-        </div>
-        {!soportaDictado && <div style={{ fontSize: 11, color: MUTE, marginTop: 8 }}>Tu navegador no tiene dictado por voz — podés usar el micrófono del teclado para escribir igual.</div>}
-        {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginTop: 12 }}>{error}</div>}
-        {respuesta && (
-          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
-            <div style={{ whiteSpace: "pre-wrap", fontSize: 13.5, color: "#1A1A1A", lineHeight: 1.6 }}>{respuesta}</div>
-            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-              <button onClick={copiar} style={btnNuevo}>{copiado ? "¡Copiado!" : "Copiar"}</button>
-              {soportaLectura && (
-                <button onClick={hablando ? detenerLectura : escucharRespuesta} style={btnNuevo}>{hablando ? "⏹️ Detener" : "🔊 Escuchar"}</button>
-              )}
-            </div>
-          </div>
+        {mensajes.length > 0 && (
+          <button onClick={nuevaConversacion} style={{ border: "none", background: "none", color: MUTE, fontSize: 11.5, cursor: "pointer", marginLeft: "auto" }}>+ Nueva conversación</button>
         )}
+      </div>
+
+      <Tarjeta style={{ display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
+        <div style={{ maxHeight: 460, overflowY: "auto", padding: "18px 18px 4px" }}>
+          {mensajes.length === 0 && !cargando && (
+            <div style={{ fontSize: 12.5, color: MUTE, padding: "10px 0" }}>Empezá a escribir o tocá 🎙️ Hablarle para arrancar la conversación.</div>
+          )}
+          {mensajes.map((m, i) => (
+            <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start", marginBottom: 14 }}>
+              <div style={{ maxWidth: "82%" }}>
+                <div style={{
+                  background: m.role === "user" ? BRASS : FONDO,
+                  color: m.role === "user" ? "#fff" : "#1A1A1A",
+                  borderRadius: m.role === "user" ? "14px 14px 3px 14px" : "14px 14px 14px 3px",
+                  padding: "11px 14px", fontSize: 13.5, lineHeight: 1.55, whiteSpace: "pre-wrap"
+                }}>{m.contenido}</div>
+                {m.role === "assistant" && (
+                  <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                    <button onClick={() => copiar(m.contenido, i)} style={{ border: "none", background: "none", color: MUTE, fontSize: 10.5, cursor: "pointer" }}>{copiadoIdx === i ? "¡Copiado!" : "Copiar"}</button>
+                    {soportaLectura && (
+                      <button onClick={() => hablandoIdx === i ? detenerLectura() : escucharTexto(m.contenido, i)} style={{ border: "none", background: "none", color: MUTE, fontSize: 10.5, cursor: "pointer" }}>{hablandoIdx === i ? "⏹️ Detener" : "🔊 Escuchar"}</button>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          {cargando && (
+            <div style={{ display: "flex", justifyContent: "flex-start", marginBottom: 14 }}>
+              <div style={{ background: FONDO, borderRadius: "14px 14px 14px 3px", padding: "11px 16px", fontSize: 13, color: MUTE }}>Pensando…</div>
+            </div>
+          )}
+          <div ref={finRef} />
+        </div>
+
+        {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, margin: "0 18px 14px" }}>{error}</div>}
+
+        <div style={{ borderTop: `1px solid ${BORDER}`, padding: 14, display: "flex", gap: 8, alignItems: "flex-end" }}>
+          <textarea value={prompt} onChange={e => setPrompt(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar(prompt); } }}
+            placeholder="Escribí o hablale al asistente…"
+            style={{ flex: 1, minHeight: 44, maxHeight: 120, padding: 10, borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
+          {soportaDictado && (
+            <button onClick={hablarle} disabled={escuchando ? false : cargando} style={{
+              border: "none", borderRadius: 10, padding: "12px 14px", fontSize: 15, cursor: "pointer",
+              background: escuchando ? "#B3261E" : "#EDEFF3", color: escuchando ? "#fff" : NAVY
+            }}>🎙️</button>
+          )}
+          <button onClick={() => enviar(prompt)} disabled={cargando || !prompt.trim()} style={{ ...btnBrass, padding: "12px 20px", opacity: cargando || !prompt.trim() ? 0.6 : 1 }}>
+            {cargando ? "…" : "Enviar"}
+          </button>
+        </div>
+        {!soportaDictado && <div style={{ fontSize: 11, color: MUTE, padding: "0 14px 12px" }}>Tu navegador no tiene dictado por voz — podés usar el micrófono del teclado para escribir igual.</div>}
       </Tarjeta>
     </div>
   );
@@ -1441,6 +1476,8 @@ function PanelProspeccion({ onData, marca }) {
   const CATEGORIAS_PROSPECCION = marca === "VIP Deco & Home" ? CATEGORIAS_PROSPECCION_DECO : CATEGORIAS_PROSPECCION_VV;
   const [zonas, setZonas] = useState(["GBA Sur"]);
   const [categorias, setCategorias] = useState([CATEGORIAS_PROSPECCION[0]]);
+  const [zonaLibre, setZonaLibre] = useState("");
+  const [categoriaLibre, setCategoriaLibre] = useState("");
   const [corriendo, setCorriendo] = useState(false);
   const [log, setLog] = useState([]);
   const [encontrados, setEncontrados] = useState(0);
@@ -1455,9 +1492,23 @@ function PanelProspeccion({ onData, marca }) {
     setLista(lista.includes(valor) ? lista.filter(x => x !== valor) : [...lista, valor]);
   }
 
+  function agregarZonaLibre() {
+    const v = zonaLibre.trim();
+    if (!v || zonas.includes(v)) { setZonaLibre(""); return; }
+    setZonas(z => [...z, v]);
+    setZonaLibre("");
+  }
+
+  function agregarCategoriaLibre() {
+    const v = categoriaLibre.trim();
+    if (!v || categorias.includes(v)) { setCategoriaLibre(""); return; }
+    setCategorias(c => [...c, v]);
+    setCategoriaLibre("");
+  }
+
   const combos = zonas.length * categorias.length;
-  const minutosEstimados = Math.max(1, Math.ceil(combos * 0.5));
-  const costoEstimado = (combos * 0.06).toFixed(2);
+  const minutosEstimados = Math.max(1, Math.ceil(combos * 0.75));
+  const costoEstimado = (combos * 0.15).toFixed(2);
 
   async function empezar() {
     if (combos === 0) { setError("Elegí al menos una zona y una categoría."); return; }
@@ -1476,8 +1527,11 @@ function PanelProspeccion({ onData, marca }) {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ zona, categoria })
           });
-          const data = await r.json();
-          if (!r.ok) throw new Error(data.error || "Error en la búsqueda");
+          const textoCrudo = await r.text();
+          let data;
+          try { data = JSON.parse(textoCrudo); }
+          catch (e) { throw new Error(`Respuesta no-JSON (status ${r.status}): ${textoCrudo.slice(0, 200)}`); }
+          if (!r.ok) throw new Error(`(status ${r.status}) ${data.error || "Error en la búsqueda"}`);
           const empresas = data.empresas || [];
           for (const e of empresas) {
             if (!e.nombre) continue;
@@ -1517,23 +1571,49 @@ function PanelProspeccion({ onData, marca }) {
         </div>
 
         <div style={{ fontSize: 11, fontWeight: 700, color: MUTE, marginBottom: 8, letterSpacing: ".06em", textTransform: "uppercase" }}>Dónde buscar</div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
           {ZONAS_PROSPECCION.map(z => (
             <button key={z} onClick={() => alternar(zonas, setZonas, z)} disabled={corriendo} style={{
               border: `1.5px solid ${zonas.includes(z) ? NAVY : BORDER}`, borderRadius: 20, padding: "8px 14px", fontSize: 12, fontWeight: 700,
               background: zonas.includes(z) ? NAVY : "#fff", color: zonas.includes(z) ? "#fff" : NAVY, cursor: corriendo ? "default" : "pointer"
             }}>{z}</button>
           ))}
+          {zonas.filter(z => !ZONAS_PROSPECCION.includes(z)).map(z => (
+            <button key={z} onClick={() => alternar(zonas, setZonas, z)} disabled={corriendo} style={{
+              border: `1.5px solid ${BRASS}`, borderRadius: 20, padding: "8px 14px", fontSize: 12, fontWeight: 700,
+              background: "#FBF3E8", color: "#8A5F1E", cursor: corriendo ? "default" : "pointer"
+            }}>{z} ✕</button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+          <input value={zonaLibre} onChange={e => setZonaLibre(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregarZonaLibre(); } }}
+            placeholder="Otra zona (ej: Zárate, Escobar, Tigre)…" disabled={corriendo}
+            style={{ ...campoEstilo, flex: "1 1 240px" }} />
+          <button onClick={agregarZonaLibre} disabled={corriendo || !zonaLibre.trim()} style={btnNuevo}>+ Agregar</button>
         </div>
 
         <div style={{ fontSize: 11, fontWeight: 700, color: MUTE, marginBottom: 8, letterSpacing: ".06em", textTransform: "uppercase" }}>A quién buscar</div>
-        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 18 }}>
+        <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
           {CATEGORIAS_PROSPECCION.map(c => (
             <button key={c} onClick={() => alternar(categorias, setCategorias, c)} disabled={corriendo} style={{
               border: `1.5px solid ${categorias.includes(c) ? BRASS : BORDER}`, borderRadius: 20, padding: "8px 14px", fontSize: 12, fontWeight: 700,
               background: categorias.includes(c) ? "#FBF3E8" : "#fff", color: categorias.includes(c) ? "#8A5F1E" : NAVY, cursor: corriendo ? "default" : "pointer"
             }}>{categorias.includes(c) ? "✓ " : ""}{c}</button>
           ))}
+          {categorias.filter(c => !CATEGORIAS_PROSPECCION.includes(c)).map(c => (
+            <button key={c} onClick={() => alternar(categorias, setCategorias, c)} disabled={corriendo} style={{
+              border: `1.5px solid ${BRASS}`, borderRadius: 20, padding: "8px 14px", fontSize: 12, fontWeight: 700,
+              background: "#FBF3E8", color: "#8A5F1E", cursor: corriendo ? "default" : "pointer"
+            }}>✓ {c} ✕</button>
+          ))}
+        </div>
+        <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
+          <input value={categoriaLibre} onChange={e => setCategoriaLibre(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); agregarCategoriaLibre(); } }}
+            placeholder="Otro rubro de empresa (ej: showroom de decoración, corralón)…" disabled={corriendo}
+            style={{ ...campoEstilo, flex: "1 1 240px" }} />
+          <button onClick={agregarCategoriaLibre} disabled={corriendo || !categoriaLibre.trim()} style={btnNuevo}>+ Agregar</button>
         </div>
 
         <div style={{ background: FONDO, borderRadius: 10, padding: "12px 14px", fontSize: 12.5, color: SUB, marginBottom: 16 }}>
@@ -1663,7 +1743,7 @@ function CentroOperaciones() {
         {area === "finanzas" && <PanelFinanzas onData={setFinanzas} marca={marca} />}
         {area === "producto" && <PanelProducto onData={setPedidosProducto} />}
         {area === "seguridad" && <PanelSeguridad onData={setIncidentes} />}
-        {area === "asistente" && <PanelAsistente prospectos={prospectosMarca} campanas={campanasMarca} grupos={grupos} />}
+        {area === "asistente" && <PanelAsistente prospectos={prospectosMarca} campanas={campanasMarca} grupos={grupos} marca={marca} />}
         {area === "diseno" && <PanelDiseno />}
       </div>
     </div>
@@ -1674,4 +1754,3 @@ ReactDOM.render(<Sitio />, document.getElementById("root"));
 </script>
 </body>
 </html>
-
