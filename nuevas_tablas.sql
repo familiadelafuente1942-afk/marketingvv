@@ -124,6 +124,16 @@ create table if not exists seguridad_respaldos (
 );
 
 -- ═══════════════════════════════════════════════════════════════
+-- LANDING PÚBLICA: permitir que cualquiera (sin login) cree un
+-- prospecto desde el formulario de contacto — pero NUNCA leer,
+-- editar ni borrar. Eso sigue reservado solo a vvconstrucciones@yahoo.com.ar
+-- ═══════════════════════════════════════════════════════════════
+drop policy if exists "publico_inserta_prospecto" on prospectos;
+create policy "publico_inserta_prospecto" on prospectos
+  for insert to anon
+  with check (true);
+
+-- ═══════════════════════════════════════════════════════════════
 -- RLS: solo vvconstrucciones@yahoo.com.ar puede leer/escribir
 -- ═══════════════════════════════════════════════════════════════
 do $$
