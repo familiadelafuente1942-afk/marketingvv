@@ -1151,7 +1151,11 @@ function Sitio() {
   }
 
   useEffect(() => {
-    const f = () => setVista(MAPA_RUTA[window.location.hash] || "vv");
+    const f = () => {
+      const h = window.location.hash;
+      if (Object.prototype.hasOwnProperty.call(MAPA_RUTA, h)) setVista(MAPA_RUTA[h]);
+      // si no, es un ancla interna de sección (ej. #contacto-deco) — no cambiar de vista
+    };
     window.addEventListener("hashchange", f);
     return () => window.removeEventListener("hashchange", f);
   }, []);
@@ -1185,6 +1189,44 @@ function PanelAsistente({ prospectos, campanas, grupos }) {
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [copiado, setCopiado] = useState(false);
+  const [escuchando, setEscuchando] = useState(false);
+  const [hablando, setHablando] = useState(false);
+
+  const MotorVoz = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const soportaDictado = !!MotorVoz;
+  const soportaLectura = !!window.speechSynthesis;
+
+  function hablarle() {
+    if (!soportaDictado) return;
+    const reconocimiento = new MotorVoz();
+    reconocimiento.lang = "es-AR";
+    reconocimiento.interimResults = false;
+    reconocimiento.maxAlternatives = 1;
+    reconocimiento.onstart = () => setEscuchando(true);
+    reconocimiento.onend = () => setEscuchando(false);
+    reconocimiento.onerror = () => { setEscuchando(false); setError("No pude escucharte bien, probá de nuevo."); };
+    reconocimiento.onresult = (ev) => {
+      const texto = ev.results[0][0].transcript;
+      setPrompt(p => (p ? p.trim() + " " : "") + texto);
+    };
+    reconocimiento.start();
+  }
+
+  function escucharRespuesta() {
+    if (!soportaLectura || !respuesta) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(respuesta);
+    u.lang = "es-AR";
+    u.onstart = () => setHablando(true);
+    u.onend = () => setHablando(false);
+    u.onerror = () => setHablando(false);
+    window.speechSynthesis.speak(u);
+  }
+
+  function detenerLectura() {
+    window.speechSynthesis.cancel();
+    setHablando(false);
+  }
 
   async function ejecutar(promptFinal) {
     setCargando(true); setError(""); setRespuesta(""); setCopiado(false);
@@ -1234,16 +1276,30 @@ function PanelAsistente({ prospectos, campanas, grupos }) {
         <button onClick={accionCampanaActiva} disabled={cargando} style={btnNuevo}>Post para campaña activa</button>
       </div>
       <Tarjeta>
-        <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="O escribí tu propio pedido acá (ej: redactame un mail para presentar V+V ante una administración de barrio)…"
+        <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="O escribí (o hablale) tu propio pedido acá (ej: redactame un mail para presentar V+V ante una administración de barrio)…"
           style={{ width: "100%", minHeight: 90, padding: 12, borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
-        <button onClick={() => ejecutar(prompt)} disabled={cargando || !prompt.trim()} style={{ ...btnBrass, marginTop: 10, opacity: cargando || !prompt.trim() ? 0.6 : 1 }}>
-          {cargando ? "Pensando…" : "Preguntar"}
-        </button>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 10, flexWrap: "wrap" }}>
+          <button onClick={() => ejecutar(prompt)} disabled={cargando || !prompt.trim()} style={{ ...btnBrass, opacity: cargando || !prompt.trim() ? 0.6 : 1 }}>
+            {cargando ? "Pensando…" : "Preguntar"}
+          </button>
+          {soportaDictado && (
+            <button onClick={hablarle} disabled={escuchando} style={{
+              border: "none", borderRadius: 20, padding: "10px 16px", fontSize: 12.5, fontWeight: 700, cursor: "pointer",
+              background: escuchando ? "#B3261E" : "#EDEFF3", color: escuchando ? "#fff" : NAVY
+            }}>{escuchando ? "🎙️ Escuchando…" : "🎙️ Hablarle"}</button>
+          )}
+        </div>
+        {!soportaDictado && <div style={{ fontSize: 11, color: MUTE, marginTop: 8 }}>Tu navegador no tiene dictado por voz — podés usar el micrófono del teclado para escribir igual.</div>}
         {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginTop: 12 }}>{error}</div>}
         {respuesta && (
           <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
             <div style={{ whiteSpace: "pre-wrap", fontSize: 13.5, color: "#1A1A1A", lineHeight: 1.6 }}>{respuesta}</div>
-            <button onClick={copiar} style={{ ...btnNuevo, marginTop: 12 }}>{copiado ? "¡Copiado!" : "Copiar"}</button>
+            <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+              <button onClick={copiar} style={btnNuevo}>{copiado ? "¡Copiado!" : "Copiar"}</button>
+              {soportaLectura && (
+                <button onClick={hablando ? detenerLectura : escucharRespuesta} style={btnNuevo}>{hablando ? "⏹️ Detener" : "🔊 Escuchar"}</button>
+              )}
+            </div>
           </div>
         )}
       </Tarjeta>
