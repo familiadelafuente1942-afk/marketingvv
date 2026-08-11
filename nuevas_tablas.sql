@@ -39,6 +39,12 @@ create table if not exists socios_prospectados (
 );
 alter table socios_prospectados add column if not exists marca text default 'V+V Construcciones';
 
+alter table grupos_barrios add column if not exists marca text default 'V+V Construcciones';
+alter table contenido add column if not exists marca text default 'V+V Construcciones';
+alter table competencia add column if not exists marca text default 'V+V Construcciones';
+alter table finanzas_ingresos add column if not exists marca text default 'V+V Construcciones';
+alter table finanzas_gastos add column if not exists marca text default 'V+V Construcciones';
+
 -- MARKETING ────────────────────────────────────────────────────
 create table if not exists campanas (
   id uuid primary key default gen_random_uuid(),
@@ -171,6 +177,11 @@ create table if not exists seguridad_respaldos (
 );
 
 -- ═══════════════════════════════════════════════════════════════
+-- ═══════════════════════════════════════════════════════════════
+-- Sumar marca a prospectos (ya existía de antes)
+-- ═══════════════════════════════════════════════════════════════
+alter table prospectos add column if not exists marca text default 'V+V Construcciones';
+
 -- LANDING PÚBLICA: permitir que cualquiera (sin login) cree un
 -- prospecto desde el formulario de contacto — pero NUNCA leer,
 -- editar ni borrar. Eso sigue reservado solo a vvconstrucciones@yahoo.com.ar

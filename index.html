@@ -397,7 +397,7 @@ function SubTabs({ tabs, actual, onCambiar }) {
 const ESTADOS_PROSPECTO = ["nuevo", "contactado", "reunión", "propuesta", "cerrado", "perdido"];
 const COLOR_PROSPECTO = { nuevo: "#4A5565", contactado: "#9A6B1E", "reunión": "#3B6CA8", propuesta: BRASS, cerrado: "#2F7A4F", perdido: "#B3261E" };
 
-function PanelComercial({ onData }) {
+function PanelComercial({ onData, marca }) {
   const [prospectos, setProspectos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -413,6 +413,8 @@ function PanelComercial({ onData }) {
     finally { setCargando(false); }
   }
   useEffect(() => { cargar(); }, []);
+
+  const visibles = prospectos.filter(p => (p.marca || "V+V Construcciones") === marca);
 
   async function cambiarEstado(id, estado) {
     try {
@@ -434,11 +436,11 @@ function PanelComercial({ onData }) {
   }
 
   function FormNuevo() {
-    const [f, setF] = useState({ nombre_contacto: "", empresa: "", email: "", telefono: "", tipo_proyecto: "construcción", zona: "", origen: "" });
+    const [f, setF] = useState({ nombre_contacto: "", empresa: "", email: "", telefono: "", tipo_proyecto: marca === "VIP Deco & Home" ? "interiorismo/decoración" : "construcción", zona: "", origen: "" });
     async function guardar() {
       if (!f.nombre_contacto.trim() && !f.empresa.trim()) return;
       try {
-        const [fila] = await vvFetch("prospectos", { method: "POST", body: JSON.stringify(f) });
+        const [fila] = await vvFetch("prospectos", { method: "POST", body: JSON.stringify({ ...f, marca }) });
         const nuevas = [fila, ...prospectos];
         setProspectos(nuevas);
         if (onData) onData(nuevas);
@@ -462,16 +464,16 @@ function PanelComercial({ onData }) {
 
   return (
     <div>
-      <Encabezado area="Comercial" titulo="Prospectos para construir" />
+      <Encabezado area="Comercial" titulo={marca === "VIP Deco & Home" ? "Prospectos de VIP Deco & Home" : "Prospectos para construir"} />
       <Tarjeta>
         <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{prospectos.length} contacto{prospectos.length === 1 ? "" : "s"}</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{visibles.length} contacto{visibles.length === 1 ? "" : "s"}</div>
           <button onClick={() => setNuevo(v => !v)} style={btnNuevo}>{nuevo ? "Cancelar" : "+ Nuevo"}</button>
         </div>
         {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 }}>{error}</div>}
         {nuevo && <FormNuevo />}
         {cargando ? <div style={{ fontSize: 12.5, color: MUTE }}>Cargando…</div> :
-          prospectos.length === 0 ? <div style={{ fontSize: 12.5, color: MUTE }}>Sin contactos cargados todavía.</div> :
+          visibles.length === 0 ? <div style={{ fontSize: 12.5, color: MUTE }}>Sin contactos cargados todavía.</div> :
           <div style={{ overflowX: "auto" }}>
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead><tr>
@@ -479,7 +481,7 @@ function PanelComercial({ onData }) {
                 <th style={th}>Mail</th><th style={th}>Estado</th><th style={th}></th>
               </tr></thead>
               <tbody>
-                {prospectos.map(p => (
+                {visibles.map(p => (
                   <tr key={p.id}>
                     <td style={td}><div>{p.nombre_contacto || "—"}</div>{p.empresa && <div style={{ fontSize: 10.5, color: MUTE }}>{p.empresa}</div>}</td>
                     <td style={td}>{p.tipo_proyecto || "—"}</td>
@@ -502,32 +504,29 @@ function PanelComercial({ onData }) {
 }
 
 // ═══════════════════════ MARKETING ═══════════════════════
-function PanelMarketing({ onCampanas, onGrupos }) {
+function PanelMarketing({ onCampanas, onGrupos, marca }) {
   const [sub, setSub] = useState("campanas");
-  const [marca, setMarca] = useState("todas");
+  const filtroMarca = { campo: "marca", valor: marca };
   return (
     <div>
       <Encabezado area="Marketing" titulo="Campañas, contenido y competencia" />
       <SubTabs tabs={[{ id: "campanas", label: "Campañas" }, { id: "grupos", label: "Grupos de barrios" }, { id: "contenido", label: "Contenido" }, { id: "competencia", label: "Competencia" }]} actual={sub} onCambiar={setSub} />
       {sub === "campanas" && (
-        <React.Fragment>
-          <SubTabs tabs={[{ id: "todas", label: "Todas las marcas" }, { id: "V+V Construcciones", label: "V+V Construcciones" }, { id: "VIP Deco & Home", label: "VIP Deco & Home" }]} actual={marca} onCambiar={setMarca} />
-          <ListaGenerica key={marca} tabla="campanas" etiqueta="campaña" onData={onCampanas}
-            filtro={marca === "todas" ? null : { campo: "marca", valor: marca }}
-            estadoCampo="estado" estadoOpciones={["planificada", "activa", "pausada", "finalizada"]}
-            colorEstado={{ planificada: "#4A5565", activa: "#2F7A4F", pausada: "#9A6B1E", finalizada: BRASS }}
-            campos={[
-              { key: "nombre", label: "Campaña", ancho: "1 1 200px" },
-              { key: "marca", label: "Marca", tipo: "select", opciones: ["V+V Construcciones", "VIP Deco & Home"] },
-              { key: "canal", label: "Canal", tipo: "select", opciones: ["instagram", "facebook", "google", "whatsapp", "cartelería", "otro"] },
-              { key: "presupuesto", label: "Presupuesto", tipo: "number" },
-              { key: "gasto", label: "Gasto", tipo: "number" },
-              { key: "leads_generados", label: "Leads", tipo: "number" }
-            ]} />
-        </React.Fragment>
+        <ListaGenerica key={marca} tabla="campanas" etiqueta="campaña" onData={onCampanas}
+          filtro={filtroMarca}
+          estadoCampo="estado" estadoOpciones={["planificada", "activa", "pausada", "finalizada"]}
+          colorEstado={{ planificada: "#4A5565", activa: "#2F7A4F", pausada: "#9A6B1E", finalizada: BRASS }}
+          campos={[
+            { key: "nombre", label: "Campaña", ancho: "1 1 200px" },
+            { key: "canal", label: "Canal", tipo: "select", opciones: ["instagram", "facebook", "google", "whatsapp", "cartelería", "otro"] },
+            { key: "presupuesto", label: "Presupuesto", tipo: "number" },
+            { key: "gasto", label: "Gasto", tipo: "number" },
+            { key: "leads_generados", label: "Leads", tipo: "number" }
+          ]} />
       )}
       {sub === "grupos" && (
-        <ListaGenerica tabla="grupos_barrios" etiqueta="grupo" ordenarPor="ultima_publicacion" onData={onGrupos}
+        <ListaGenerica key={marca} tabla="grupos_barrios" etiqueta="grupo" ordenarPor="ultima_publicacion" onData={onGrupos}
+          filtro={filtroMarca}
           estadoCampo="estado" estadoOpciones={["por pedir acceso", "pedido enviado", "autorizado", "publicando"]}
           colorEstado={{ "por pedir acceso": "#4A5565", "pedido enviado": "#9A6B1E", autorizado: "#3B6CA8", publicando: "#2F7A4F" }}
           campos={[
@@ -538,7 +537,8 @@ function PanelMarketing({ onCampanas, onGrupos }) {
           ]} />
       )}
       {sub === "contenido" && (
-        <ListaGenerica tabla="contenido" etiqueta="pieza"
+        <ListaGenerica key={marca} tabla="contenido" etiqueta="pieza"
+          filtro={filtroMarca}
           estadoCampo="estado" estadoOpciones={["idea", "en progreso", "programado", "publicado"]}
           colorEstado={{ idea: "#4A5565", "en progreso": "#9A6B1E", programado: "#3B6CA8", publicado: "#2F7A4F" }}
           campos={[
@@ -549,7 +549,8 @@ function PanelMarketing({ onCampanas, onGrupos }) {
           ]} />
       )}
       {sub === "competencia" && (
-        <ListaGenerica tabla="competencia" etiqueta="competidor" ordenarPor="ultima_revision"
+        <ListaGenerica key={marca} tabla="competencia" etiqueta="competidor" ordenarPor="ultima_revision"
+          filtro={filtroMarca}
           campos={[
             { key: "nombre", label: "Nombre", ancho: "1 1 180px" },
             { key: "notas", label: "Notas", ancho: "2 1 260px" },
@@ -620,16 +621,19 @@ function PanelSoporte({ onData }) {
 }
 
 // ═══════════════════════ FINANZAS ═══════════════════════
-function PanelFinanzas({ onData }) {
+function PanelFinanzas({ onData, marca }) {
   const [sub, setSub] = useState("ingresos");
   const [ingresos, setIngresos] = useState([]);
   const [gastos, setGastos] = useState([]);
   useEffect(() => {
     if (onData) onData({ ingresos, gastos });
   }, [ingresos, gastos]);
-  const totalIngresos = ingresos.reduce((a, x) => a + Number(x.monto || 0), 0);
-  const totalGastos = gastos.reduce((a, x) => a + Number(x.monto || 0), 0);
+  const ingresosMarca = ingresos.filter(x => (x.marca || "V+V Construcciones") === marca);
+  const gastosMarca = gastos.filter(x => (x.marca || "V+V Construcciones") === marca);
+  const totalIngresos = ingresosMarca.reduce((a, x) => a + Number(x.monto || 0), 0);
+  const totalGastos = gastosMarca.reduce((a, x) => a + Number(x.monto || 0), 0);
   const fmt = n => n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+  const filtroMarca = { campo: "marca", valor: marca };
   return (
     <div>
       <Encabezado area="Finanzas" titulo="Ingresos y gastos" />
@@ -640,7 +644,8 @@ function PanelFinanzas({ onData }) {
       </div>
       <SubTabs tabs={[{ id: "ingresos", label: "Ingresos" }, { id: "gastos", label: "Gastos" }]} actual={sub} onCambiar={setSub} />
       {sub === "ingresos" && (
-        <ListaGenerica tabla="finanzas_ingresos" etiqueta="ingreso" onData={setIngresos}
+        <ListaGenerica key={marca} tabla="finanzas_ingresos" etiqueta="ingreso" onData={setIngresos}
+          filtro={filtroMarca}
           campos={[
             { key: "concepto", label: "Concepto", ancho: "1 1 200px" },
             { key: "monto", label: "Monto", tipo: "number" },
@@ -649,7 +654,8 @@ function PanelFinanzas({ onData }) {
           ]} />
       )}
       {sub === "gastos" && (
-        <ListaGenerica tabla="finanzas_gastos" etiqueta="gasto" onData={setGastos}
+        <ListaGenerica key={marca} tabla="finanzas_gastos" etiqueta="gasto" onData={setGastos}
+          filtro={filtroMarca}
           campos={[
             { key: "concepto", label: "Concepto", ancho: "1 1 200px" },
             { key: "monto", label: "Monto", tipo: "number" },
@@ -711,12 +717,12 @@ function PanelSeguridad({ onData }) {
 }
 
 // ═══════════════════════ CEO ═══════════════════════
-function PanelCEO({ metricas }) {
+function PanelCEO({ metricas, marca }) {
   const m = metricas;
   const fmt = n => (n || 0).toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
   return (
     <div>
-      <Encabezado area="CEO" titulo="Resumen general" />
+      <Encabezado area="CEO" titulo={`Resumen general — ${marca}`} />
       <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
         <StatMini n={m.prospectos ?? "…"} l="Prospectos totales" />
         <StatMini n={m.prospectosCerrados ?? "…"} l="Prospectos cerrados" color="#2F7A4F" />
@@ -810,7 +816,7 @@ function FormularioContacto() {
     if (!f.nombre_contacto.trim()) return;
     setEnviando(true); setError("");
     try {
-      await insertarProspectoPublico({ ...f, estado: "nuevo", origen: "web" });
+      await insertarProspectoPublico({ ...f, marca: "V+V Construcciones", estado: "nuevo", origen: "web" });
       setEnviado(true);
     } catch (err) { setError(err.message); }
     finally { setEnviando(false); }
@@ -996,7 +1002,7 @@ function FormularioContactoDeco() {
     if (!f.nombre_contacto.trim()) return;
     setEnviando(true); setError("");
     try {
-      await insertarProspectoPublico({ ...f, estado: "nuevo", origen: "web vip deco" });
+      await insertarProspectoPublico({ ...f, marca: "VIP Deco & Home", estado: "nuevo", origen: "web vip deco" });
       setEnviado(true);
     } catch (err) { setError(err.message); }
     finally { setEnviando(false); }
@@ -1417,12 +1423,13 @@ function PanelDiseno() {
 
 // ═══════════════════════ PROSPECCIÓN DE SOCIOS ═══════════════════════
 const ZONAS_PROSPECCION = ["CABA", "GBA Norte", "GBA Oeste", "GBA Sur", "La Plata / PBA Interior"];
-const CATEGORIAS_PROSPECCION = ["estudio de arquitectura", "desarrollador inmobiliario", "gerenciadora de obra"];
+const CATEGORIAS_PROSPECCION_VV = ["estudio de arquitectura", "desarrollador inmobiliario", "gerenciadora de obra"];
+const CATEGORIAS_PROSPECCION_DECO = ["estudio de arquitectura", "interiorista", "empresa de decoración"];
 
-function PanelProspeccion({ onData }) {
-  const [marca, setMarca] = useState("V+V Construcciones");
+function PanelProspeccion({ onData, marca }) {
+  const CATEGORIAS_PROSPECCION = marca === "VIP Deco & Home" ? CATEGORIAS_PROSPECCION_DECO : CATEGORIAS_PROSPECCION_VV;
   const [zonas, setZonas] = useState(["GBA Sur"]);
-  const [categorias, setCategorias] = useState(["estudio de arquitectura"]);
+  const [categorias, setCategorias] = useState([CATEGORIAS_PROSPECCION[0]]);
   const [corriendo, setCorriendo] = useState(false);
   const [log, setLog] = useState([]);
   const [encontrados, setEncontrados] = useState(0);
@@ -1430,6 +1437,8 @@ function PanelProspeccion({ onData }) {
   const [error, setError] = useState("");
   const detenerRef = React.useRef(false);
   const [refrescar, setRefrescar] = useState(0);
+
+  useEffect(() => { setCategorias([CATEGORIAS_PROSPECCION[0]]); }, [marca]);
 
   function alternar(lista, setLista, valor) {
     setLista(lista.includes(valor) ? lista.filter(x => x !== valor) : [...lista, valor]);
@@ -1488,8 +1497,7 @@ function PanelProspeccion({ onData }) {
 
   return (
     <div>
-      <Encabezado area="Prospección" titulo="Buscar estudios y constructoras socias" />
-      <SubTabs tabs={[{ id: "V+V Construcciones", label: "V+V Construcciones" }, { id: "VIP Deco & Home", label: "VIP Deco & Home" }]} actual={marca} onCambiar={setMarca} />
+      <Encabezado area="Prospección" titulo={marca === "VIP Deco & Home" ? "Buscar interioristas y estudios socios" : "Buscar estudios y desarrolladores socios"} />
       <Tarjeta style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 13, color: SUB, marginBottom: 16 }}>
           Elegí dónde y a quién buscar. Se recorre cada combinación de zona/categoría revisando
@@ -1573,6 +1581,7 @@ const AREAS = [
 function CentroOperaciones() {
   const [autenticado, setAutenticado] = useState(!!tokenGuardado());
   const [area, setArea] = useState("ceo");
+  const [marca, setMarca] = useState("V+V Construcciones");
   const [prospectos, setProspectos] = useState([]);
   const [campanas, setCampanas] = useState([]);
   const [clientesObra, setClientesObra] = useState([]);
@@ -1583,14 +1592,19 @@ function CentroOperaciones() {
   const [incidentes, setIncidentes] = useState([]);
   const [grupos, setGrupos] = useState([]);
 
+  const prospectosMarca = prospectos.filter(p => (p.marca || "V+V Construcciones") === marca);
+  const campanasMarca = campanas.filter(c => (c.marca || "V+V Construcciones") === marca);
+  const ingresosMarca = finanzas.ingresos.filter(x => (x.marca || "V+V Construcciones") === marca);
+  const gastosMarca = finanzas.gastos.filter(x => (x.marca || "V+V Construcciones") === marca);
+
   const metricas = {
-    prospectos: prospectos.length,
-    prospectosCerrados: prospectos.filter(p => p.estado === "cerrado").length,
-    campanasActivas: campanas.filter(c => c.estado === "activa").length,
-    leadsGenerados: campanas.reduce((a, c) => a + Number(c.leads_generados || 0), 0),
+    prospectos: prospectosMarca.length,
+    prospectosCerrados: prospectosMarca.filter(p => p.estado === "cerrado").length,
+    campanasActivas: campanasMarca.filter(c => c.estado === "activa").length,
+    leadsGenerados: campanasMarca.reduce((a, c) => a + Number(c.leads_generados || 0), 0),
     clientesObra: clientesObra.filter(c => c.etapa !== "entregada").length,
     ticketsAbiertos: ticketsOp.filter(t => t.estado === "abierto").length + ticketsSop.filter(t => t.estado === "abierto").length,
-    balance: finanzas.ingresos.reduce((a, x) => a + Number(x.monto || 0), 0) - finanzas.gastos.reduce((a, x) => a + Number(x.monto || 0), 0),
+    balance: ingresosMarca.reduce((a, x) => a + Number(x.monto || 0), 0) - gastosMarca.reduce((a, x) => a + Number(x.monto || 0), 0),
     pedidosProducto: pedidosProducto.filter(p => p.estado !== "resuelto").length,
     incidentesSeguridad: incidentes.filter(i => i.estado === "abierto").length
   };
@@ -1605,6 +1619,19 @@ function CentroOperaciones() {
           <button onClick={() => { cerrarSesion(); setAutenticado(false); }} style={{ border: "none", background: "none", color: "#8B95A5", fontSize: 11.5, cursor: "pointer" }}>Cerrar sesión</button>
         </div>
       </div>
+      <div style={{ background: "#161F30", padding: "10px 20px", borderBottom: "1px solid #26314A" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 10.5, color: "#8B95A5", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>Trabajando como:</span>
+          <div style={{ display: "flex", gap: 6 }}>
+            {["V+V Construcciones", "VIP Deco & Home"].map(m => (
+              <button key={m} onClick={() => setMarca(m)} style={{
+                border: "none", borderRadius: 20, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                background: marca === m ? BRASS : "transparent", color: marca === m ? "#fff" : "#B7BFCC"
+              }}>{m}</button>
+            ))}
+          </div>
+        </div>
+      </div>
       <div style={{ background: "#0D1420", padding: "10px 20px", overflowX: "auto" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", gap: 6 }}>
           {AREAS.map(a => (
@@ -1616,16 +1643,16 @@ function CentroOperaciones() {
         </div>
       </div>
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "28px 20px" }}>
-        {area === "ceo" && <PanelCEO metricas={metricas} />}
-        {area === "comercial" && <PanelComercial onData={setProspectos} />}
-        {area === "marketing" && <PanelMarketing onCampanas={setCampanas} onGrupos={setGrupos} />}
-        {area === "prospeccion" && <PanelProspeccion onData={() => {}} />}
+        {area === "ceo" && <PanelCEO metricas={metricas} marca={marca} />}
+        {area === "comercial" && <PanelComercial onData={setProspectos} marca={marca} />}
+        {area === "marketing" && <PanelMarketing onCampanas={setCampanas} onGrupos={setGrupos} marca={marca} />}
+        {area === "prospeccion" && <PanelProspeccion onData={() => {}} marca={marca} />}
         {area === "operaciones" && <PanelOperaciones onData={setClientesObra} />}
         {area === "soporte" && <PanelSoporte onData={setTicketsSop} />}
-        {area === "finanzas" && <PanelFinanzas onData={setFinanzas} />}
+        {area === "finanzas" && <PanelFinanzas onData={setFinanzas} marca={marca} />}
         {area === "producto" && <PanelProducto onData={setPedidosProducto} />}
         {area === "seguridad" && <PanelSeguridad onData={setIncidentes} />}
-        {area === "asistente" && <PanelAsistente prospectos={prospectos} campanas={campanas} grupos={grupos} />}
+        {area === "asistente" && <PanelAsistente prospectos={prospectosMarca} campanas={campanasMarca} grupos={grupos} />}
         {area === "diseno" && <PanelDiseno />}
       </div>
     </div>
