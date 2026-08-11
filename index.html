@@ -81,6 +81,60 @@ input, select, textarea { font-family: inherit; }
   .lp nav { display: none; }
   .lp header, .lp section { padding-left: 20px; padding-right: 20px; }
 }
+
+/* ═══════ Landing VIP Deco & Home (paleta cálida y minimal, propia) ═══════ */
+.ld {
+  --crema: #F7F3EC; --crema-osc: #EFE8DA; --piedra: #E6DDCB; --negro: #1A1714;
+  --terra: #A9673C; --arena: #C9BBA0; --linea: rgba(26,23,20,.12);
+  font-family: 'Inter', sans-serif; background: var(--crema); color: var(--negro); line-height: 1.55;
+}
+.ld h1, .ld h2, .ld h3 { font-family: 'Fraunces', serif; font-weight: 400; letter-spacing: -0.01em; line-height: 1.05; }
+.ld .medida { font-weight: 600; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--terra); }
+.ld a { color: inherit; }
+.ld img { max-width: 100%; display: block; }
+.ld header { display: flex; align-items: center; justify-content: space-between; padding: 26px 40px; }
+.ld .logo { font-family: 'Fraunces', serif; font-weight: 500; font-size: 19px; letter-spacing: .01em; }
+.ld nav { display: flex; gap: 30px; font-size: 12.5px; font-weight: 500; }
+.ld nav a { text-decoration: none; opacity: .7; }
+.ld .btn { display: inline-block; background: var(--negro); color: var(--crema); padding: 13px 24px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; border: none; text-decoration: none; }
+.ld .btn-linea { display: inline-block; border: 1px solid var(--negro); padding: 12px 24px; font-size: 11.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; text-decoration: none; }
+.ld .hero { padding: 70px 40px 60px; }
+.ld .hero-grid { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 60px; align-items: center; }
+.ld .hero h1 { font-size: clamp(38px, 5.4vw, 64px); }
+.ld .hero p.lead { font-size: 16px; color: #4A433C; max-width: 420px; margin-top: 20px; }
+.ld .hero-cta { display: flex; gap: 14px; margin-top: 30px; flex-wrap: wrap; }
+.ld section { padding: 70px 40px; max-width: 1180px; margin: 0 auto; }
+.ld .eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.ld .eyebrow .txt { font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--terra); }
+.ld .eyebrow .raya { flex: 1; height: 1px; background: var(--linea); }
+.ld .colecciones h2, .ld .categorias h2, .ld .productos h2 { font-size: clamp(28px, 3.6vw, 40px); max-width: 600px; margin-bottom: 40px; }
+.ld .grid-colecciones { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1px; background: var(--linea); border: 1px solid var(--linea); }
+.ld .coleccion { background: var(--crema); padding: 32px 26px; }
+.ld .coleccion h3 { font-size: 22px; margin: 6px 0 10px; }
+.ld .coleccion p { font-size: 13.5px; color: #5A5347; }
+.ld .grid-categorias { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; }
+.ld .categoria { position: relative; aspect-ratio: 1/1; overflow: hidden; background: var(--piedra); }
+.ld .categoria img { width: 100%; height: 100%; object-fit: cover; }
+.ld .categoria .nombre { position: absolute; left: 0; bottom: 0; right: 0; padding: 14px; background: linear-gradient(to top, rgba(26,23,20,.75), transparent); color: #fff; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+.ld .grid-productos { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 22px; margin-top: 40px; }
+.ld .producto img { width: 100%; aspect-ratio: 4/5; object-fit: cover; background: var(--piedra); }
+.ld .producto h3 { font-size: 14px; font-weight: 600; margin-top: 12px; }
+.ld .producto .precio { font-size: 13px; color: var(--terra); margin-top: 4px; }
+.ld .cita { background: var(--negro); color: var(--crema); }
+.ld .cita blockquote { font-family: 'Fraunces', serif; font-weight: 400; font-style: italic; font-size: clamp(22px, 3.2vw, 34px); max-width: 760px; line-height: 1.3; margin: 0; }
+.ld .cita .firma { margin-top: 24px; font-size: 12.5px; color: var(--arena); }
+.ld .contacto { text-align: center; }
+.ld .contacto h2 { font-size: clamp(28px, 4.2vw, 46px); max-width: 640px; margin: 0 auto 22px; }
+.ld .contacto p { color: #6B6355; max-width: 460px; margin: 0 auto 30px; font-size: 14px; }
+.ld .form-contacto { max-width: 480px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.ld .form-contacto input, .ld .form-contacto select { padding: 12px 14px; border-radius: 2px; border: 1px solid var(--linea); font-size: 14px; background: #fff; }
+.ld footer { border-top: 1px solid var(--linea); padding: 26px 40px; display: flex; justify-content: space-between; font-size: 11.5px; color: #6B6355; flex-wrap: wrap; gap: 10px; }
+.ld footer .acceso-interno { color: #6B6355; opacity: .55; text-decoration: none; font-size: 10px; }
+@media (max-width: 900px) {
+  .ld .hero-grid { grid-template-columns: 1fr; }
+  .ld nav { display: none; }
+  .ld header, .ld section { padding-left: 20px; padding-right: 20px; }
+}
 </style>
 </head>
 <body>
@@ -108,6 +162,12 @@ function guardarToken(t, r) {
   try {
     localStorage.setItem("vv_token", (t || "").trim());
     if (r) localStorage.setItem("vv_refresh", (r || "").trim());
+  } catch (e) {}
+}
+function cerrarSesion() {
+  try {
+    localStorage.removeItem("vv_token");
+    localStorage.removeItem("vv_refresh");
   } catch (e) {}
 }
 async function renovarSesion() {
@@ -211,7 +271,7 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [nuevo, setNuevo] = useState(false);
-  const vacio = campos.reduce((acc, c) => ({ ...acc, [c.key]: c.tipo === "number" ? 0 : "" }), estadoCampo ? { [estadoCampo]: estadoOpciones[0] } : {});
+  const vacio = campos.reduce((acc, c) => ({ ...acc, [c.key]: c.tipo === "number" ? 0 : c.tipo === "select" ? c.opciones[0] : "" }), estadoCampo ? { [estadoCampo]: estadoOpciones[0] } : {});
   const [f, setF] = useState(vacio);
 
   async function cargar() {
@@ -388,7 +448,7 @@ function PanelComercial({ onData }) {
         <input placeholder="Mail" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} style={{ ...campoEstilo, flex: "1 1 160px" }} />
         <input placeholder="Teléfono" value={f.telefono} onChange={e => setF({ ...f, telefono: e.target.value })} style={{ ...campoEstilo, flex: "1 1 130px" }} />
         <select value={f.tipo_proyecto} onChange={e => setF({ ...f, tipo_proyecto: e.target.value })} style={campoEstilo}>
-          {["construcción", "remodelación", "ampliación", "otro"].map(t => <option key={t} value={t}>{t}</option>)}
+          {["construcción", "remodelación", "ampliación", "interiorismo/decoración", "otro"].map(t => <option key={t} value={t}>{t}</option>)}
         </select>
         <input placeholder="Zona" value={f.zona} onChange={e => setF({ ...f, zona: e.target.value })} style={{ ...campoEstilo, width: 130 }} />
         <button onClick={guardar} style={btnBrass}>Agregar</button>
@@ -438,12 +498,12 @@ function PanelComercial({ onData }) {
 }
 
 // ═══════════════════════ MARKETING ═══════════════════════
-function PanelMarketing({ onCampanas }) {
+function PanelMarketing({ onCampanas, onGrupos }) {
   const [sub, setSub] = useState("campanas");
   return (
     <div>
       <Encabezado area="Marketing" titulo="Campañas, contenido y competencia" />
-      <SubTabs tabs={[{ id: "campanas", label: "Campañas" }, { id: "contenido", label: "Contenido" }, { id: "competencia", label: "Competencia" }]} actual={sub} onCambiar={setSub} />
+      <SubTabs tabs={[{ id: "campanas", label: "Campañas" }, { id: "grupos", label: "Grupos de barrios" }, { id: "contenido", label: "Contenido" }, { id: "competencia", label: "Competencia" }]} actual={sub} onCambiar={setSub} />
       {sub === "campanas" && (
         <ListaGenerica tabla="campanas" etiqueta="campaña" onData={onCampanas}
           estadoCampo="estado" estadoOpciones={["planificada", "activa", "pausada", "finalizada"]}
@@ -454,6 +514,17 @@ function PanelMarketing({ onCampanas }) {
             { key: "presupuesto", label: "Presupuesto", tipo: "number" },
             { key: "gasto", label: "Gasto", tipo: "number" },
             { key: "leads_generados", label: "Leads", tipo: "number" }
+          ]} />
+      )}
+      {sub === "grupos" && (
+        <ListaGenerica tabla="grupos_barrios" etiqueta="grupo" ordenarPor="ultima_publicacion" onData={onGrupos}
+          estadoCampo="estado" estadoOpciones={["por pedir acceso", "pedido enviado", "autorizado", "publicando"]}
+          colorEstado={{ "por pedir acceso": "#4A5565", "pedido enviado": "#9A6B1E", autorizado: "#3B6CA8", publicando: "#2F7A4F" }}
+          campos={[
+            { key: "barrio", label: "Barrio", ancho: "1 1 160px" },
+            { key: "tipo", label: "Tipo de grupo", tipo: "select", opciones: ["comercial/ventas", "fútbol", "social/vecinos", "padres/colegio", "otro"] },
+            { key: "contacto", label: "Quién invita / admin", ancho: "1 1 160px" },
+            { key: "ultima_publicacion", label: "Última publicación", tipo: "date" }
           ]} />
       )}
       {sub === "contenido" && (
@@ -737,7 +808,7 @@ function FormularioContacto() {
       <input type="email" placeholder="Mail" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} />
       <input placeholder="Teléfono" value={f.telefono} onChange={e => setF({ ...f, telefono: e.target.value })} />
       <select value={f.tipo_proyecto} onChange={e => setF({ ...f, tipo_proyecto: e.target.value })}>
-        {["construcción", "remodelación", "ampliación", "otro"].map(t => <option key={t} value={t}>{t}</option>)}
+        {["construcción", "remodelación", "ampliación", "interiorismo/decoración", "otro"].map(t => <option key={t} value={t}>{t}</option>)}
       </select>
       <input placeholder="Zona" value={f.zona} onChange={e => setF({ ...f, zona: e.target.value })} />
       <button type="submit" disabled={enviando} className="btn" style={{ marginTop: 4, opacity: enviando ? 0.6 : 1 }}>{enviando ? "Enviando…" : "Contanos tu proyecto"}</button>
@@ -857,6 +928,160 @@ function Landing() {
 
       <footer>
         <div>© 2026 V+V Construcciones — Hudson, Buenos Aires, Argentina</div>
+        <a href="#deco" style={{ fontSize: 10.5 }}>VIP Deco & Home →</a>
+        <a href="#operaciones" className="acceso-interno">Acceso interno →</a>
+      </footer>
+    </div>
+  );
+}
+
+// ═══════════════════════ LANDING VIP DECO & HOME ═══════════════════════
+const COLECCIONES_DECO = [
+  { nombre: "White Style", texto: "Minimalismo puro, luz y calma. Formas orgánicas y una paleta blanca que resalta el diseño artesanal." },
+  { nombre: "Black Style", texto: "Elegancia en su máxima expresión. Una línea audaz y contemporánea, con el negro como protagonista." },
+  { nombre: "Brown Style", texto: "Calidez que abraza. Tonos tierra y esencia natural, lo rústico hecho a mano con dedicación." },
+  { nombre: "Terrazo", texto: "Textura, color y movimiento. Cada pieza es única, con su propio marmolado artesanal." },
+  { nombre: "BYW Style", texto: "Tierra y luz en equilibrio. Una fusión entre el marrón profundo y el blanco cálido." }
+];
+
+const CATEGORIAS_DECO = [
+  { nombre: "Bandejas y cuencos", img: "https://vipdeco.com.ar/wp-content/uploads/2026/02/platon3.webp" },
+  { nombre: "Jarrones y floreros", img: "https://vipdeco.com.ar/wp-content/uploads/2026/02/1-1.webp" },
+  { nombre: "Velas y aromas", img: "https://vipdeco.com.ar/wp-content/uploads/2026/02/velones.webp" },
+  { nombre: "Decoración", img: "https://vipdeco.com.ar/wp-content/uploads/2026/02/black-style-2.webp" },
+  { nombre: "Esculturas y adornos", img: "https://vipdeco.com.ar/wp-content/uploads/2026/02/escultura.webp" }
+];
+
+const PRODUCTOS_DECO = [
+  { nombre: "Bandeja Platón Perla Black Style", precio: "$ 35.000", img: "https://vipdeco.com.ar/wp-content/uploads/2026/05/GBHIIOI-600x800.jpeg" },
+  { nombre: "Jarrón Milán", precio: "$ 200.000", img: "https://vipdeco.com.ar/wp-content/uploads/2026/04/WhatsApp-Image-2026-05-25-at-22.31.09-600x800.jpeg" },
+  { nombre: "Jarrón Roma", precio: "$ 180.000", img: "https://vipdeco.com.ar/wp-content/uploads/2026/04/VGGB-600x800.jpeg" },
+  { nombre: "Jarrón Duna White Style", precio: "$ 40.000", img: "https://vipdeco.com.ar/wp-content/uploads/2026/04/huuju-600x800.jpeg" }
+];
+
+function FormularioContactoDeco() {
+  const [f, setF] = useState({ nombre_contacto: "", email: "", telefono: "", tipo_proyecto: "interiorismo/decoración", zona: "" });
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState("");
+
+  async function enviar(e) {
+    e.preventDefault();
+    if (!f.nombre_contacto.trim()) return;
+    setEnviando(true); setError("");
+    try {
+      await insertarProspectoPublico({ ...f, estado: "nuevo", origen: "web vip deco" });
+      setEnviado(true);
+    } catch (err) { setError(err.message); }
+    finally { setEnviando(false); }
+  }
+
+  if (enviado) {
+    return <div style={{ background: "#1A1714", color: "#F7F3EC", borderRadius: 2, padding: "16px 18px", fontSize: 14, fontWeight: 500 }}>¡Gracias! Te contactamos a la brevedad.</div>;
+  }
+
+  return (
+    <form onSubmit={enviar} className="form-contacto">
+      {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 4, padding: "9px 12px", fontSize: 12.5 }}>{error}</div>}
+      <input placeholder="Nombre y apellido" value={f.nombre_contacto} onChange={e => setF({ ...f, nombre_contacto: e.target.value })} required />
+      <input type="email" placeholder="Mail" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} />
+      <input placeholder="Teléfono" value={f.telefono} onChange={e => setF({ ...f, telefono: e.target.value })} />
+      <select value={f.tipo_proyecto} onChange={e => setF({ ...f, tipo_proyecto: e.target.value })}>
+        {["interiorismo/decoración", "compra mayorista", "compra minorista", "otro"].map(t => <option key={t} value={t}>{t}</option>)}
+      </select>
+      <input placeholder="Zona" value={f.zona} onChange={e => setF({ ...f, zona: e.target.value })} />
+      <button type="submit" disabled={enviando} className="btn" style={{ marginTop: 4, opacity: enviando ? 0.6 : 1 }}>{enviando ? "Enviando…" : "Contanos qué buscás"}</button>
+    </form>
+  );
+}
+
+function LandingDeco() {
+  return (
+    <div className="ld">
+      <header>
+        <div className="logo">VIP <i>Deco</i> &amp; Home</div>
+        <nav>
+          <a href="#colecciones-deco">Colecciones</a>
+          <a href="#productos-deco">Productos</a>
+          <a href="#contacto-deco">Contacto</a>
+        </nav>
+        <a href="#contacto-deco" className="btn">Contacto</a>
+      </header>
+
+      <div className="hero">
+        <div className="hero-grid">
+          <div>
+            <div className="medida">Piezas de concreto y resina hechas a mano</div>
+            <h1>Espacios<br />con alma.</h1>
+            <p className="lead">Diseño artesanal de bandejas, jarrones, esculturas y velas. Venta minorista y mayorista, con envíos a todo el país.</p>
+            <div className="hero-cta">
+              <a href="#contacto-deco" className="btn">Contanos qué buscás</a>
+              <a href="#colecciones-deco" className="btn-linea">Ver colecciones</a>
+            </div>
+          </div>
+          <div style={{ aspectRatio: "4/5", overflow: "hidden" }}>
+            <img src="https://vipdeco.com.ar/wp-content/uploads/2026/03/hero-3.webp" alt="VIP Deco & Home" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+        </div>
+      </div>
+
+      <section className="colecciones" id="colecciones-deco">
+        <div className="eyebrow"><span className="txt">Colecciones</span><span className="raya"></span></div>
+        <h2>Cinco estilos, una misma pasión artesanal.</h2>
+        <div className="grid-colecciones">
+          {COLECCIONES_DECO.map(c => (
+            <div className="coleccion" key={c.nombre}><h3>{c.nombre}</h3><p>{c.texto}</p></div>
+          ))}
+        </div>
+      </section>
+
+      <section className="categorias">
+        <div className="eyebrow"><span className="txt">Categorías</span><span className="raya"></span></div>
+        <h2>Encontrá tu pieza.</h2>
+        <div className="grid-categorias">
+          {CATEGORIAS_DECO.map(c => (
+            <div className="categoria" key={c.nombre}>
+              <img src={c.img} alt={c.nombre} />
+              <div className="nombre">{c.nombre}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="productos" id="productos-deco">
+        <div className="eyebrow"><span className="txt">Novedades</span><span className="raya"></span></div>
+        <h2>Últimas piezas.</h2>
+        <div className="grid-productos">
+          {PRODUCTOS_DECO.map(p => (
+            <div className="producto" key={p.nombre}>
+              <img src={p.img} alt={p.nombre} />
+              <h3>{p.nombre}</h3>
+              <div className="precio">{p.precio} IVA incluido</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="cita">
+        <div className="eyebrow"><span className="txt">Nuestra historia</span><span className="raya"></span></div>
+        <blockquote>Vip Deco & Home es el reflejo de una evolución constante y de la pasión por crear espacios con alma, a través del diseño de piezas de concreto y resina hechas a mano.</blockquote>
+        <div className="firma">VIP Deco & Home</div>
+      </section>
+
+      <section className="contacto" id="contacto-deco">
+        <div className="eyebrow" style={{ justifyContent: "center" }}><span className="txt">Contacto</span></div>
+        <h2>¿Buscás algo especial para tu espacio?</h2>
+        <p>Contanos qué necesitás — venta minorista, mayorista, o un proyecto de interiorismo a medida.</p>
+        <FormularioContactoDeco />
+        <div style={{ marginTop: 32, fontSize: 12, color: "#6B6355", lineHeight: 1.9 }}>
+          (54) 11 5479-0284 · ventas@vipdeco.com.ar<br />
+          @vipdecoandhome
+        </div>
+      </section>
+
+      <footer>
+        <div>© 2026 VIP Deco & Home — Buenos Aires, Argentina</div>
+        <a href="#" style={{ fontSize: 10.5 }}>V+V Construcciones →</a>
         <a href="#operaciones" className="acceso-interno">Acceso interno →</a>
       </footer>
     </div>
@@ -871,10 +1096,96 @@ function Sitio() {
     window.addEventListener("hashchange", f);
     return () => window.removeEventListener("hashchange", f);
   }, []);
-  return ruta === "#operaciones" ? <CentroOperaciones /> : <Landing />;
+  if (ruta === "#operaciones") return <CentroOperaciones />;
+  if (ruta === "#deco") return <LandingDeco />;
+  return <Landing />;
 }
 
 // ═══════════════════════ CONTENEDOR ═══════════════════════
+// ═══════════════════════ ASISTENTE IA ═══════════════════════
+async function preguntarleAlAsistente(prompt) {
+  const r = await fetch("/api/asistente", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.error || "Error del asistente");
+  return data.texto;
+}
+
+function PanelAsistente({ prospectos, campanas, grupos }) {
+  const [prompt, setPrompt] = useState("");
+  const [respuesta, setRespuesta] = useState("");
+  const [cargando, setCargando] = useState(false);
+  const [error, setError] = useState("");
+  const [copiado, setCopiado] = useState(false);
+
+  async function ejecutar(promptFinal) {
+    setCargando(true); setError(""); setRespuesta(""); setCopiado(false);
+    try {
+      const texto = await preguntarleAlAsistente(promptFinal);
+      setRespuesta(texto);
+    } catch (e) { setError(e.message); }
+    finally { setCargando(false); }
+  }
+
+  function accionGrupoPendiente() {
+    const pendiente = grupos.find(g => g.estado === "por pedir acceso");
+    if (!pendiente) { setError("No hay grupos con estado 'por pedir acceso' en Marketing → Grupos de barrios."); return; }
+    const p = `Redactá un mensaje corto de WhatsApp (en español rioplatense, tono cordial) para pedirle a un vecino o administrador del barrio "${pendiente.barrio}" que me autorice a sumarme al grupo de tipo "${pendiente.tipo || 'comercial/ventas'}", para poder ofrecer los servicios de V+V Construcciones (constructora de Zona Sur, más de 12 años de experiencia). Que sea breve, respetuoso, y deje claro que respetaré las reglas del grupo.`;
+    setPrompt(p);
+    ejecutar(p);
+  }
+
+  function accionProspectosFrios() {
+    const nuevos = prospectos.filter(p => p.estado === "nuevo").slice(0, 15);
+    if (nuevos.length === 0) { setError("No hay prospectos en estado 'nuevo' en Comercial."); return; }
+    const lista = nuevos.map(p => `- ${p.nombre_contacto || p.empresa || "sin nombre"} (${p.tipo_proyecto || "sin rubro"}, zona: ${p.zona || "sin zona"})`).join("\n");
+    const p = `Tengo estos prospectos sin contactar todavía:\n${lista}\n\nOrdenalos por prioridad de contacto (con un criterio breve de por qué) y sugerime, para los 3 más prioritarios, una primera línea de mensaje personalizada para arrancar la conversación.`;
+    setPrompt(p);
+    ejecutar(p);
+  }
+
+  function accionCampanaActiva() {
+    const activa = campanas.find(c => c.estado === "activa") || campanas[0];
+    if (!activa) { setError("No hay campañas cargadas en Marketing → Campañas."); return; }
+    const p = `Redactá una publicación corta para Instagram (con 2-3 emojis, sin ser excesivo) promocionando la campaña "${activa.nombre}" de V+V Construcciones por el canal ${activa.canal || "instagram"}. Que incluya un cierre con llamado a la acción hacia el formulario de contacto de la web.`;
+    setPrompt(p);
+    ejecutar(p);
+  }
+
+  function copiar() {
+    if (!respuesta) return;
+    navigator.clipboard.writeText(respuesta).then(() => { setCopiado(true); setTimeout(() => setCopiado(false), 2000); });
+  }
+
+  return (
+    <div>
+      <Encabezado area="Asistente" titulo="Asistente de IA" />
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
+        <button onClick={accionGrupoPendiente} disabled={cargando} style={btnNuevo}>Mensaje para próximo grupo pendiente</button>
+        <button onClick={accionProspectosFrios} disabled={cargando} style={btnNuevo}>Priorizar prospectos sin contactar</button>
+        <button onClick={accionCampanaActiva} disabled={cargando} style={btnNuevo}>Post para campaña activa</button>
+      </div>
+      <Tarjeta>
+        <textarea value={prompt} onChange={e => setPrompt(e.target.value)} placeholder="O escribí tu propio pedido acá (ej: redactame un mail para presentar V+V ante una administración de barrio)…"
+          style={{ width: "100%", minHeight: 90, padding: 12, borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
+        <button onClick={() => ejecutar(prompt)} disabled={cargando || !prompt.trim()} style={{ ...btnBrass, marginTop: 10, opacity: cargando || !prompt.trim() ? 0.6 : 1 }}>
+          {cargando ? "Pensando…" : "Preguntar"}
+        </button>
+        {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginTop: 12 }}>{error}</div>}
+        {respuesta && (
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
+            <div style={{ whiteSpace: "pre-wrap", fontSize: 13.5, color: "#1A1A1A", lineHeight: 1.6 }}>{respuesta}</div>
+            <button onClick={copiar} style={{ ...btnNuevo, marginTop: 12 }}>{copiado ? "¡Copiado!" : "Copiar"}</button>
+          </div>
+        )}
+      </Tarjeta>
+    </div>
+  );
+}
+
 const AREAS = [
   { id: "ceo", label: "CEO" },
   { id: "comercial", label: "Comercial" },
@@ -883,7 +1194,8 @@ const AREAS = [
   { id: "soporte", label: "Soporte" },
   { id: "finanzas", label: "Finanzas" },
   { id: "producto", label: "Producto" },
-  { id: "seguridad", label: "Seguridad" }
+  { id: "seguridad", label: "Seguridad" },
+  { id: "asistente", label: "Asistente IA" }
 ];
 
 function CentroOperaciones() {
@@ -897,6 +1209,7 @@ function CentroOperaciones() {
   const [finanzas, setFinanzas] = useState({ ingresos: [], gastos: [] });
   const [pedidosProducto, setPedidosProducto] = useState([]);
   const [incidentes, setIncidentes] = useState([]);
+  const [grupos, setGrupos] = useState([]);
 
   const metricas = {
     prospectos: prospectos.length,
@@ -915,8 +1228,9 @@ function CentroOperaciones() {
   return (
     <div style={{ minHeight: "100vh" }}>
       <div style={{ background: NAVY, padding: "14px 20px" }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <img src={LOGO_VV} alt="V+V Construcciones" style={{ height: 30, display: "block" }} />
+          <button onClick={() => { cerrarSesion(); setAutenticado(false); }} style={{ border: "none", background: "none", color: "#8B95A5", fontSize: 11.5, cursor: "pointer" }}>Cerrar sesión</button>
         </div>
       </div>
       <div style={{ background: "#0D1420", padding: "10px 20px", overflowX: "auto" }}>
@@ -932,12 +1246,13 @@ function CentroOperaciones() {
       <div style={{ maxWidth: 1000, margin: "0 auto", padding: "28px 20px" }}>
         {area === "ceo" && <PanelCEO metricas={metricas} />}
         {area === "comercial" && <PanelComercial onData={setProspectos} />}
-        {area === "marketing" && <PanelMarketing onCampanas={setCampanas} />}
+        {area === "marketing" && <PanelMarketing onCampanas={setCampanas} onGrupos={setGrupos} />}
         {area === "operaciones" && <PanelOperaciones onData={setClientesObra} />}
         {area === "soporte" && <PanelSoporte onData={setTicketsSop} />}
         {area === "finanzas" && <PanelFinanzas onData={setFinanzas} />}
         {area === "producto" && <PanelProducto onData={setPedidosProducto} />}
         {area === "seguridad" && <PanelSeguridad onData={setIncidentes} />}
+        {area === "asistente" && <PanelAsistente prospectos={prospectos} campanas={campanas} grupos={grupos} />}
       </div>
     </div>
   );
