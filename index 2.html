@@ -1,0 +1,906 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>V+V Marketing — Centro de Operaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/17.0.2/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/17.0.2/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.26.4/babel.min.js"></script>
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; font-family: 'Inter', sans-serif; background: #F5F6F8; color: #101C2C; }
+h1, h2, h3 { font-family: 'Fraunces', serif; margin: 0; }
+button { cursor: pointer; font-family: inherit; }
+input, select, textarea { font-family: inherit; }
+
+/* ═══════ Landing pública (paleta industrial propia, separada del Centro de Operaciones) ═══════ */
+.lp {
+  --hormigon: #F3F0E9; --hormigon-osc: #E9E3D6; --piedra: #DDD5C4; --carbon: #2B2925;
+  --oxido: #C1633F; --acero: #6B7C82; --acero-claro: #A8B4B8; --linea: rgba(43,41,37,.13);
+  font-family: 'Archivo', 'Inter', sans-serif; background: var(--hormigon); color: var(--carbon); line-height: 1.5;
+}
+.lp h1, .lp h2, .lp h3, .lp .display { font-family: 'Archivo Expanded', 'Fraunces', sans-serif; font-weight: 800; letter-spacing: -0.01em; line-height: 0.98; }
+.lp .medida { font-weight: 600; font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: var(--oxido); }
+.lp a { color: inherit; }
+.lp img { max-width: 100%; display: block; }
+.lp .marco { position: relative; border: 1px solid var(--linea); }
+.lp header { display: flex; align-items: center; justify-content: space-between; padding: 22px 40px; border-bottom: 1px solid var(--linea); }
+.lp .logo { font-family: 'Archivo Expanded', 'Fraunces', sans-serif; font-weight: 800; font-size: 20px; }
+.lp .logo span { color: var(--oxido); }
+.lp nav { display: flex; gap: 32px; font-size: 13px; font-weight: 600; }
+.lp nav a { text-decoration: none; opacity: .75; }
+.lp .btn { display: inline-block; background: var(--oxido); color: #fff; padding: 12px 22px; font-size: 12.5px; font-weight: 700; border: none; text-decoration: none; letter-spacing: .02em; }
+.lp .btn-linea { display: inline-block; border: 1.5px solid var(--carbon); padding: 10.5px 22px; font-size: 12.5px; font-weight: 700; text-decoration: none; }
+.lp .hero { padding: 90px 40px 70px; }
+.lp .hero-grid { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 60px; align-items: end; }
+.lp .hero h1 { font-size: clamp(46px, 6.2vw, 84px); }
+.lp .hero h1 .oxido { color: var(--oxido); }
+.lp .hero p.lead { font-size: 17px; color: #4A4640; max-width: 440px; margin-top: 22px; }
+.lp .hero-cta { display: flex; gap: 14px; margin-top: 34px; flex-wrap: wrap; }
+.lp .hero-cifras { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--linea); margin-top: 60px; max-width: 1180px; margin-left: auto; margin-right: auto; }
+.lp .cifra { padding: 22px 0; border-right: 1px solid var(--linea); }
+.lp .cifra:last-child { border-right: none; }
+.lp .cifra .n { font-family: 'Archivo Expanded', 'Fraunces', sans-serif; font-weight: 800; font-size: 38px; color: var(--oxido); }
+.lp .cifra .l { font-size: 11.5px; color: var(--acero); text-transform: uppercase; letter-spacing: .08em; font-weight: 600; margin-top: 4px; }
+.lp section { padding: 80px 40px; max-width: 1180px; margin: 0 auto; }
+.lp .eyebrow { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
+.lp .eyebrow .num { font-family: 'Archivo Expanded', 'Fraunces', sans-serif; font-weight: 800; font-size: 13px; color: var(--oxido); }
+.lp .eyebrow .txt { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--acero); }
+.lp .eyebrow .raya { flex: 1; height: 1px; background: var(--linea); }
+.lp .servicios { background: var(--piedra); }
+.lp .servicios h2 { font-size: clamp(30px, 4vw, 46px); max-width: 640px; margin-bottom: 46px; }
+.lp .grid-servicios { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1px; background: var(--linea); }
+.lp .servicio { background: var(--piedra); padding: 30px 26px; }
+.lp .servicio h3 { font-size: 21px; margin: 14px 0 10px; font-weight: 700; }
+.lp .servicio p { font-size: 13.5px; color: #5B584F; }
+.lp .portfolio h2 { font-size: clamp(30px, 4vw, 46px); max-width: 600px; }
+.lp .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-top: 40px; }
+.lp .obra { position: relative; aspect-ratio: 4/5; overflow: hidden; }
+.lp .obra .ph { width: 100%; height: 100%; object-fit: cover; }
+.lp .obra .info { position: absolute; left: 0; bottom: 0; right: 0; padding: 18px; background: linear-gradient(to top, rgba(243,240,233,.92), transparent); }
+.lp .obra .info h3 { font-size: 17px; margin-top: 6px; font-weight: 700; }
+.lp .cita { background: var(--hormigon-osc); }
+.lp .cita blockquote { font-family: 'Archivo Expanded', 'Fraunces', sans-serif; font-weight: 700; font-size: clamp(24px, 3.6vw, 38px); max-width: 780px; line-height: 1.25; margin: 0; }
+.lp .cita .firma { margin-top: 26px; font-size: 13px; color: var(--acero); }
+.lp .cita .firma b { color: var(--carbon); }
+.lp .contacto { text-align: center; padding-bottom: 60px; }
+.lp .contacto h2 { font-size: clamp(32px, 5vw, 56px); max-width: 700px; margin: 0 auto 26px; }
+.lp .contacto p { color: var(--acero); max-width: 480px; margin: 0 auto 34px; font-size: 14.5px; }
+.lp .form-contacto { max-width: 520px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; text-align: left; }
+.lp .form-contacto input, .lp .form-contacto select { padding: 12px 14px; border-radius: 4px; border: 1px solid var(--linea); font-size: 14px; background: #fff; }
+.lp footer { border-top: 1px solid var(--linea); padding: 26px 40px; display: flex; justify-content: space-between; font-size: 12px; color: var(--acero); flex-wrap: wrap; gap: 10px; }
+.lp footer .acceso-interno { color: var(--acero); opacity: .55; text-decoration: none; font-size: 10.5px; }
+@media (max-width: 900px) {
+  .lp .hero-grid { grid-template-columns: 1fr; }
+  .lp .hero-cifras { grid-template-columns: 1fr; }
+  .lp .cifra { border-right: none; border-bottom: 1px solid var(--linea); }
+  .lp .portfolio-grid { grid-template-columns: 1fr; }
+  .lp nav { display: none; }
+  .lp header, .lp section { padding-left: 20px; padding-right: 20px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect } = React;
+
+const SUPA_URL = "https://ipvrpdsbkfpkvfkfzlnb.supabase.co";
+const SUPA_KEY = "sb_publishable_7iKBrNN68LcYZmVPLAKAvw_EBwFshs0";
+
+const NAVY = "#101C2C";
+const BRASS = "#B0894F";
+const BORDER = "#E6E9EE";
+const CARD = "#FFFFFF";
+const SUB = "#4A5565";
+const MUTE = "#8B95A5";
+const FONDO = "#F5F6F8";
+
+// ── sesión con renovación automática (lección aprendida con NEXO) ──
+function tokenGuardado() { try { return localStorage.getItem("vv_token"); } catch (e) { return null; } }
+function refreshGuardado() { try { return localStorage.getItem("vv_refresh"); } catch (e) { return null; } }
+function guardarToken(t, r) {
+  try {
+    localStorage.setItem("vv_token", (t || "").trim());
+    if (r) localStorage.setItem("vv_refresh", (r || "").trim());
+  } catch (e) {}
+}
+async function renovarSesion() {
+  const refresh = refreshGuardado();
+  if (!refresh) return null;
+  try {
+    const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: SUPA_KEY, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: refresh })
+    });
+    const d = await r.json();
+    if (!r.ok) return null;
+    guardarToken(d.access_token, d.refresh_token);
+    return d.access_token;
+  } catch (e) { return null; }
+}
+async function iniciarSesionConCredenciales(email, clave) {
+  const r = await fetch(`${SUPA_URL}/auth/v1/token?grant_type=password`, {
+    method: "POST",
+    headers: { apikey: SUPA_KEY, "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password: clave })
+  });
+  const d = await r.json();
+  if (!r.ok) throw new Error(d.error_description || d.msg || "No se pudo iniciar sesión");
+  guardarToken(d.access_token, d.refresh_token);
+  return d.access_token;
+}
+async function pedirSesion() {
+  // el login con correo/contraseña se resuelve antes con la pantalla LoginForm;
+  // acá solo se usa el token ya guardado, renovándolo si hace falta.
+  let t = tokenGuardado();
+  if (t) return t;
+  const renovado = await renovarSesion();
+  if (renovado) return renovado;
+  throw new Error("Sesión vencida — iniciá sesión de nuevo");
+}
+
+// ── fetch con reintento automático + lectura segura del cuerpo (bug de Safari) ──
+async function vvFetch(ruta, opciones, _reintentado) {
+  const t = await pedirSesion();
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${ruta}`, {
+      ...opciones,
+      headers: {
+        apikey: SUPA_KEY,
+        Authorization: `Bearer ${t}`,
+        "Content-Type": "application/json",
+        Prefer: "return=representation",
+        ...(opciones && opciones.headers)
+      }
+    });
+    if (!r.ok) {
+      const txt = await r.text();
+      if (r.status === 401 && !_reintentado) {
+        try { localStorage.removeItem("vv_token"); } catch (e) {}
+        const renovado = await renovarSesion();
+        if (renovado) return vvFetch(ruta, opciones, true);
+      }
+      throw new Error(`${r.status} · ${txt.slice(0, 200)}`);
+    }
+    const cuerpo = await r.text();
+    return cuerpo ? JSON.parse(cuerpo) : null;
+  } catch (e) {
+    throw new Error(`[${ruta}] ${e.message}`);
+  }
+}
+
+// ── estilos compartidos ──
+const campoEstilo = { padding: "10px 12px", borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13 };
+const th = { textAlign: "left", fontSize: 9.5, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase", color: MUTE, padding: "0 10px 8px" };
+const td = { padding: "10px", fontSize: 12.5, color: "#1A1A1A", borderTop: `1px solid #EEF0F3` };
+const btnBrass = { border: "none", borderRadius: 20, padding: "10px 18px", background: BRASS, color: "#fff", fontWeight: 700, fontSize: 12.5 };
+const btnNuevo = { border: "none", borderRadius: 20, padding: "8px 16px", background: "#EAF3EC", color: "#2F7A4F", fontWeight: 700, fontSize: 11, marginLeft: "auto" };
+
+function Tarjeta({ children, style }) {
+  return <div style={{ background: CARD, borderRadius: 13, border: `1px solid ${BORDER}`, padding: "18px 20px", ...style }}>{children}</div>;
+}
+
+function Encabezado({ area, titulo }) {
+  return (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: ".12em", color: BRASS, textTransform: "uppercase", marginBottom: 6 }}>V+V · {area}</div>
+      <h1 style={{ fontSize: 26, fontWeight: 600 }}>{titulo}</h1>
+    </div>
+  );
+}
+
+function StatMini({ n, l, color }) {
+  return (
+    <div style={{ background: CARD, borderRadius: 11, border: `1px solid ${BORDER}`, padding: "14px 16px", flex: "1 1 140px" }}>
+      <div style={{ fontFamily: "'Fraunces',serif", fontSize: 26, fontWeight: 600, color: color || NAVY }}>{n}</div>
+      <div style={{ fontSize: 10.5, color: MUTE, marginTop: 2 }}>{l}</div>
+    </div>
+  );
+}
+
+// ── componente genérico de lista con alta / cambio de estado / borrado ──
+function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado, ordenarPor, onData, etiqueta }) {
+  const [filas, setFilas] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [nuevo, setNuevo] = useState(false);
+  const vacio = campos.reduce((acc, c) => ({ ...acc, [c.key]: c.tipo === "number" ? 0 : "" }), estadoCampo ? { [estadoCampo]: estadoOpciones[0] } : {});
+  const [f, setF] = useState(vacio);
+
+  async function cargar() {
+    setCargando(true);
+    setError("");
+    try {
+      const orden = ordenarPor || "creado";
+      const p = await vvFetch(`${tabla}?select=*&order=${orden}.desc&limit=500`);
+      setFilas(p || []);
+      if (onData) onData(p || []);
+    } catch (e) { setError(e.message); }
+    finally { setCargando(false); }
+  }
+  useEffect(() => { cargar(); }, []);
+
+  async function guardar() {
+    const primero = campos[0].key;
+    if (!String(f[primero] || "").trim()) return;
+    try {
+      const [fila] = await vvFetch(tabla, { method: "POST", body: JSON.stringify(f) });
+      const nuevas = [fila, ...filas];
+      setFilas(nuevas);
+      if (onData) onData(nuevas);
+      setF(vacio);
+      setNuevo(false);
+    } catch (e) { setError(e.message); }
+  }
+
+  async function cambiarEstado(id, valor) {
+    try {
+      const body = { [estadoCampo]: valor };
+      await vvFetch(`${tabla}?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body) });
+      const nuevas = filas.map(x => x.id === id ? { ...x, ...body } : x);
+      setFilas(nuevas);
+      if (onData) onData(nuevas);
+    } catch (e) { setError(e.message); }
+  }
+
+  async function borrar(id) {
+    if (!window.confirm("¿Borrar este registro?")) return;
+    try {
+      await vvFetch(`${tabla}?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      const nuevas = filas.filter(x => x.id !== id);
+      setFilas(nuevas);
+      if (onData) onData(nuevas);
+    } catch (e) { setError(e.message); }
+  }
+
+  return (
+    <Tarjeta>
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{filas.length} {etiqueta}{filas.length === 1 ? "" : "s"}</div>
+        <button onClick={() => setNuevo(v => !v)} style={btnNuevo}>{nuevo ? "Cancelar" : "+ Nuevo"}</button>
+      </div>
+      {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 }}>{error}</div>}
+      {nuevo && (
+        <div style={{ background: FONDO, borderRadius: 11, padding: 14, marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+          {campos.map(c => (
+            c.tipo === "select" ? (
+              <select key={c.key} value={f[c.key]} onChange={e => setF({ ...f, [c.key]: e.target.value })} style={campoEstilo}>
+                {c.opciones.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+            ) : (
+              <input key={c.key} type={c.tipo === "number" ? "number" : c.tipo === "date" ? "date" : "text"}
+                placeholder={c.label} value={f[c.key]}
+                onChange={e => setF({ ...f, [c.key]: c.tipo === "number" ? Number(e.target.value) : e.target.value })}
+                style={{ ...campoEstilo, flex: c.ancho || "1 1 160px" }} />
+            )
+          ))}
+          <button onClick={guardar} style={btnBrass}>Agregar</button>
+        </div>
+      )}
+      {cargando ? <div style={{ fontSize: 12.5, color: MUTE }}>Cargando…</div> :
+        filas.length === 0 ? <div style={{ fontSize: 12.5, color: MUTE }}>Sin registros todavía.</div> :
+        <div style={{ overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead><tr>
+              {campos.map(c => <th key={c.key} style={th}>{c.label}</th>)}
+              {estadoCampo && <th style={th}>{estadoCampo === "etapa" ? "Etapa" : "Estado"}</th>}
+              <th style={th}></th>
+            </tr></thead>
+            <tbody>
+              {filas.map(x => (
+                <tr key={x.id}>
+                  {campos.map(c => <td key={c.key} style={td}>{x[c.key] || "—"}</td>)}
+                  {estadoCampo && (
+                    <td style={td}>
+                      <select value={x[estadoCampo]} onChange={e => cambiarEstado(x.id, e.target.value)}
+                        style={{ fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: `1px solid ${BORDER}`, color: (colorEstado && colorEstado[x[estadoCampo]]) || NAVY }}>
+                        {estadoOpciones.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    </td>
+                  )}
+                  <td style={td}><button onClick={() => borrar(x.id)} style={{ border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 }}>Borrar</button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>}
+    </Tarjeta>
+  );
+}
+
+function SubTabs({ tabs, actual, onCambiar }) {
+  return (
+    <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+      {tabs.map(t => (
+        <button key={t.id} onClick={() => onCambiar(t.id)}
+          style={{
+            border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 12, fontWeight: 700,
+            background: actual === t.id ? NAVY : "#EDEFF3", color: actual === t.id ? "#fff" : SUB
+          }}>{t.label}</button>
+      ))}
+    </div>
+  );
+}
+
+// ═══════════════════════ COMERCIAL (ya existía) ═══════════════════════
+const ESTADOS_PROSPECTO = ["nuevo", "contactado", "reunión", "propuesta", "cerrado", "perdido"];
+const COLOR_PROSPECTO = { nuevo: "#4A5565", contactado: "#9A6B1E", "reunión": "#3B6CA8", propuesta: BRASS, cerrado: "#2F7A4F", perdido: "#B3261E" };
+
+function PanelComercial({ onData }) {
+  const [prospectos, setProspectos] = useState([]);
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
+  const [nuevo, setNuevo] = useState(false);
+
+  async function cargar() {
+    setCargando(true); setError("");
+    try {
+      const p = await vvFetch("prospectos?select=*&order=creado.desc&limit=500");
+      setProspectos(p || []);
+      if (onData) onData(p || []);
+    } catch (e) { setError(e.message); }
+    finally { setCargando(false); }
+  }
+  useEffect(() => { cargar(); }, []);
+
+  async function cambiarEstado(id, estado) {
+    try {
+      const body = { estado, fecha_ultimo_contacto: estado !== "nuevo" ? new Date().toISOString() : null };
+      await vvFetch(`prospectos?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(body) });
+      const nuevas = prospectos.map(p => p.id === id ? { ...p, ...body } : p);
+      setProspectos(nuevas);
+      if (onData) onData(nuevas);
+    } catch (e) { setError(e.message); }
+  }
+  async function borrar(id) {
+    if (!window.confirm("¿Borrar este contacto?")) return;
+    try {
+      await vvFetch(`prospectos?id=eq.${id}`, { method: "DELETE", headers: { Prefer: "return=minimal" } });
+      const nuevas = prospectos.filter(p => p.id !== id);
+      setProspectos(nuevas);
+      if (onData) onData(nuevas);
+    } catch (e) { setError(e.message); }
+  }
+
+  function FormNuevo() {
+    const [f, setF] = useState({ nombre_contacto: "", empresa: "", email: "", telefono: "", tipo_proyecto: "construcción", zona: "", origen: "" });
+    async function guardar() {
+      if (!f.nombre_contacto.trim() && !f.empresa.trim()) return;
+      try {
+        const [fila] = await vvFetch("prospectos", { method: "POST", body: JSON.stringify(f) });
+        const nuevas = [fila, ...prospectos];
+        setProspectos(nuevas);
+        if (onData) onData(nuevas);
+        setNuevo(false);
+      } catch (e) { setError(e.message); }
+    }
+    return (
+      <div style={{ background: FONDO, borderRadius: 11, padding: 14, marginBottom: 14, display: "flex", gap: 8, flexWrap: "wrap" }}>
+        <input placeholder="Nombre de contacto" value={f.nombre_contacto} onChange={e => setF({ ...f, nombre_contacto: e.target.value })} style={{ ...campoEstilo, flex: "1 1 160px" }} />
+        <input placeholder="Empresa (opcional)" value={f.empresa} onChange={e => setF({ ...f, empresa: e.target.value })} style={{ ...campoEstilo, flex: "1 1 160px" }} />
+        <input placeholder="Mail" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} style={{ ...campoEstilo, flex: "1 1 160px" }} />
+        <input placeholder="Teléfono" value={f.telefono} onChange={e => setF({ ...f, telefono: e.target.value })} style={{ ...campoEstilo, flex: "1 1 130px" }} />
+        <select value={f.tipo_proyecto} onChange={e => setF({ ...f, tipo_proyecto: e.target.value })} style={campoEstilo}>
+          {["construcción", "remodelación", "ampliación", "otro"].map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+        <input placeholder="Zona" value={f.zona} onChange={e => setF({ ...f, zona: e.target.value })} style={{ ...campoEstilo, width: 130 }} />
+        <button onClick={guardar} style={btnBrass}>Agregar</button>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <Encabezado area="Comercial" titulo="Prospectos para construir" />
+      <Tarjeta>
+        <div style={{ display: "flex", gap: 8, marginBottom: 14, alignItems: "center" }}>
+          <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{prospectos.length} contacto{prospectos.length === 1 ? "" : "s"}</div>
+          <button onClick={() => setNuevo(v => !v)} style={btnNuevo}>{nuevo ? "Cancelar" : "+ Nuevo"}</button>
+        </div>
+        {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 12 }}>{error}</div>}
+        {nuevo && <FormNuevo />}
+        {cargando ? <div style={{ fontSize: 12.5, color: MUTE }}>Cargando…</div> :
+          prospectos.length === 0 ? <div style={{ fontSize: 12.5, color: MUTE }}>Sin contactos cargados todavía.</div> :
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead><tr>
+                <th style={th}>Contacto</th><th style={th}>Tipo</th><th style={th}>Zona</th>
+                <th style={th}>Mail</th><th style={th}>Estado</th><th style={th}></th>
+              </tr></thead>
+              <tbody>
+                {prospectos.map(p => (
+                  <tr key={p.id}>
+                    <td style={td}><div>{p.nombre_contacto || "—"}</div>{p.empresa && <div style={{ fontSize: 10.5, color: MUTE }}>{p.empresa}</div>}</td>
+                    <td style={td}>{p.tipo_proyecto || "—"}</td>
+                    <td style={td}>{p.zona || "—"}</td>
+                    <td style={td}>{p.email || "—"}</td>
+                    <td style={td}>
+                      <select value={p.estado} onChange={e => cambiarEstado(p.id, e.target.value)} style={{ fontSize: 11.5, padding: "4px 6px", borderRadius: 6, border: `1px solid ${BORDER}`, color: COLOR_PROSPECTO[p.estado] }}>
+                        {ESTADOS_PROSPECTO.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+                    </td>
+                    <td style={td}><button onClick={() => borrar(p.id)} style={{ border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 }}>Borrar</button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>}
+      </Tarjeta>
+    </div>
+  );
+}
+
+// ═══════════════════════ MARKETING ═══════════════════════
+function PanelMarketing({ onCampanas }) {
+  const [sub, setSub] = useState("campanas");
+  return (
+    <div>
+      <Encabezado area="Marketing" titulo="Campañas, contenido y competencia" />
+      <SubTabs tabs={[{ id: "campanas", label: "Campañas" }, { id: "contenido", label: "Contenido" }, { id: "competencia", label: "Competencia" }]} actual={sub} onCambiar={setSub} />
+      {sub === "campanas" && (
+        <ListaGenerica tabla="campanas" etiqueta="campaña" onData={onCampanas}
+          estadoCampo="estado" estadoOpciones={["planificada", "activa", "pausada", "finalizada"]}
+          colorEstado={{ planificada: "#4A5565", activa: "#2F7A4F", pausada: "#9A6B1E", finalizada: BRASS }}
+          campos={[
+            { key: "nombre", label: "Campaña", ancho: "1 1 200px" },
+            { key: "canal", label: "Canal", tipo: "select", opciones: ["instagram", "facebook", "google", "whatsapp", "cartelería", "otro"] },
+            { key: "presupuesto", label: "Presupuesto", tipo: "number" },
+            { key: "gasto", label: "Gasto", tipo: "number" },
+            { key: "leads_generados", label: "Leads", tipo: "number" }
+          ]} />
+      )}
+      {sub === "contenido" && (
+        <ListaGenerica tabla="contenido" etiqueta="pieza"
+          estadoCampo="estado" estadoOpciones={["idea", "en progreso", "programado", "publicado"]}
+          colorEstado={{ idea: "#4A5565", "en progreso": "#9A6B1E", programado: "#3B6CA8", publicado: "#2F7A4F" }}
+          campos={[
+            { key: "titulo", label: "Título", ancho: "1 1 220px" },
+            { key: "tipo", label: "Tipo", tipo: "select", opciones: ["post", "historia", "reel", "video", "blog"] },
+            { key: "canal", label: "Canal", tipo: "select", opciones: ["instagram", "facebook", "tiktok", "web"] },
+            { key: "fecha_publicacion", label: "Fecha", tipo: "date" }
+          ]} />
+      )}
+      {sub === "competencia" && (
+        <ListaGenerica tabla="competencia" etiqueta="competidor" ordenarPor="ultima_revision"
+          campos={[
+            { key: "nombre", label: "Nombre", ancho: "1 1 180px" },
+            { key: "notas", label: "Notas", ancho: "2 1 260px" },
+            { key: "ultima_revision", label: "Última revisión", tipo: "date" }
+          ]} />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════ OPERACIONES ═══════════════════════
+function PanelOperaciones({ onData }) {
+  const [sub, setSub] = useState("clientes");
+  return (
+    <div>
+      <Encabezado area="Operaciones" titulo="Clientes en obra y tickets internos" />
+      <SubTabs tabs={[{ id: "clientes", label: "Clientes en obra" }, { id: "tickets", label: "Tickets internos" }]} actual={sub} onCambiar={setSub} />
+      {sub === "clientes" && (
+        <ListaGenerica tabla="clientes_obra" etiqueta="obra" onData={onData}
+          estadoCampo="etapa" estadoOpciones={["firma", "planos", "permisos", "inicio obra", "en curso", "entregada"]}
+          colorEstado={{ firma: "#4A5565", planos: "#9A6B1E", permisos: "#3B6CA8", "inicio obra": BRASS, "en curso": "#3B6CA8", entregada: "#2F7A4F" }}
+          campos={[
+            { key: "nombre_obra", label: "Obra", ancho: "1 1 220px" },
+            { key: "fecha_firma", label: "Fecha de firma", tipo: "date" }
+          ]} />
+      )}
+      {sub === "tickets" && (
+        <ListaGenerica tabla="tickets_operaciones" etiqueta="ticket"
+          estadoCampo="estado" estadoOpciones={["abierto", "en progreso", "resuelto"]}
+          colorEstado={{ abierto: "#B3261E", "en progreso": "#9A6B1E", resuelto: "#2F7A4F" }}
+          campos={[
+            { key: "titulo", label: "Título", ancho: "1 1 220px" },
+            { key: "descripcion", label: "Descripción", ancho: "2 1 260px" },
+            { key: "prioridad", label: "Prioridad", tipo: "select", opciones: ["baja", "media", "alta"] }
+          ]} />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════ SOPORTE ═══════════════════════
+function PanelSoporte({ onData }) {
+  const [sub, setSub] = useState("tickets");
+  return (
+    <div>
+      <Encabezado area="Soporte" titulo="Consultas de clientes y preguntas frecuentes" />
+      <SubTabs tabs={[{ id: "tickets", label: "Tickets" }, { id: "faq", label: "FAQ" }]} actual={sub} onCambiar={setSub} />
+      {sub === "tickets" && (
+        <ListaGenerica tabla="tickets_soporte" etiqueta="ticket" onData={onData}
+          estadoCampo="estado" estadoOpciones={["abierto", "en progreso", "resuelto"]}
+          colorEstado={{ abierto: "#B3261E", "en progreso": "#9A6B1E", resuelto: "#2F7A4F" }}
+          campos={[
+            { key: "cliente", label: "Cliente", ancho: "1 1 160px" },
+            { key: "asunto", label: "Asunto", ancho: "1 1 200px" },
+            { key: "prioridad", label: "Prioridad", tipo: "select", opciones: ["baja", "media", "alta"] }
+          ]} />
+      )}
+      {sub === "faq" && (
+        <ListaGenerica tabla="faq" etiqueta="pregunta"
+          campos={[
+            { key: "pregunta", label: "Pregunta", ancho: "1 1 240px" },
+            { key: "respuesta", label: "Respuesta", ancho: "2 1 280px" },
+            { key: "categoria", label: "Categoría", tipo: "select", opciones: ["general", "precios", "proceso", "garantías"] }
+          ]} />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════ FINANZAS ═══════════════════════
+function PanelFinanzas({ onData }) {
+  const [sub, setSub] = useState("ingresos");
+  const [ingresos, setIngresos] = useState([]);
+  const [gastos, setGastos] = useState([]);
+  useEffect(() => {
+    if (onData) onData({ ingresos, gastos });
+  }, [ingresos, gastos]);
+  const totalIngresos = ingresos.reduce((a, x) => a + Number(x.monto || 0), 0);
+  const totalGastos = gastos.reduce((a, x) => a + Number(x.monto || 0), 0);
+  const fmt = n => n.toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+  return (
+    <div>
+      <Encabezado area="Finanzas" titulo="Ingresos y gastos" />
+      <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+        <StatMini n={fmt(totalIngresos)} l="Ingresos totales" color="#2F7A4F" />
+        <StatMini n={fmt(totalGastos)} l="Gastos totales" color="#B3261E" />
+        <StatMini n={fmt(totalIngresos - totalGastos)} l="Balance" color={totalIngresos - totalGastos >= 0 ? "#2F7A4F" : "#B3261E"} />
+      </div>
+      <SubTabs tabs={[{ id: "ingresos", label: "Ingresos" }, { id: "gastos", label: "Gastos" }]} actual={sub} onCambiar={setSub} />
+      {sub === "ingresos" && (
+        <ListaGenerica tabla="finanzas_ingresos" etiqueta="ingreso" onData={setIngresos}
+          campos={[
+            { key: "concepto", label: "Concepto", ancho: "1 1 200px" },
+            { key: "monto", label: "Monto", tipo: "number" },
+            { key: "obra_relacionada", label: "Obra relacionada", ancho: "1 1 180px" },
+            { key: "fecha", label: "Fecha", tipo: "date" }
+          ]} />
+      )}
+      {sub === "gastos" && (
+        <ListaGenerica tabla="finanzas_gastos" etiqueta="gasto" onData={setGastos}
+          campos={[
+            { key: "concepto", label: "Concepto", ancho: "1 1 200px" },
+            { key: "monto", label: "Monto", tipo: "number" },
+            { key: "categoria", label: "Categoría", tipo: "select", opciones: ["marketing", "operativo", "administrativo", "otro"] },
+            { key: "fecha", label: "Fecha", tipo: "date" }
+          ]} />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════ PRODUCTO ═══════════════════════
+function PanelProducto({ onData }) {
+  return (
+    <div>
+      <Encabezado area="Producto" titulo="Bugs y pedidos de esta herramienta" />
+      <ListaGenerica tabla="producto_pedidos" etiqueta="pedido" onData={onData}
+        estadoCampo="estado" estadoOpciones={["pendiente", "en progreso", "resuelto"]}
+        colorEstado={{ pendiente: "#4A5565", "en progreso": "#9A6B1E", resuelto: "#2F7A4F" }}
+        campos={[
+          { key: "titulo", label: "Título", ancho: "1 1 220px" },
+          { key: "tipo", label: "Tipo", tipo: "select", opciones: ["bug", "pedido"] },
+          { key: "descripcion", label: "Descripción", ancho: "2 1 260px" },
+          { key: "prioridad", label: "Prioridad", tipo: "select", opciones: ["baja", "media", "alta"] }
+        ]} />
+    </div>
+  );
+}
+
+// ═══════════════════════ SEGURIDAD ═══════════════════════
+function PanelSeguridad({ onData }) {
+  const [sub, setSub] = useState("incidentes");
+  return (
+    <div>
+      <Encabezado area="Seguridad" titulo="Incidentes y respaldos" />
+      <SubTabs tabs={[{ id: "incidentes", label: "Incidentes" }, { id: "respaldos", label: "Respaldos" }]} actual={sub} onCambiar={setSub} />
+      {sub === "incidentes" && (
+        <ListaGenerica tabla="seguridad_incidentes" etiqueta="incidente" onData={onData}
+          estadoCampo="estado" estadoOpciones={["abierto", "resuelto"]}
+          colorEstado={{ abierto: "#B3261E", resuelto: "#2F7A4F" }}
+          campos={[
+            { key: "titulo", label: "Título", ancho: "1 1 200px" },
+            { key: "descripcion", label: "Descripción", ancho: "2 1 260px" },
+            { key: "severidad", label: "Severidad", tipo: "select", opciones: ["baja", "media", "alta"] }
+          ]} />
+      )}
+      {sub === "respaldos" && (
+        <ListaGenerica tabla="seguridad_respaldos" etiqueta="respaldo" ordenarPor="fecha"
+          estadoCampo="estado" estadoOpciones={["ok", "falló"]}
+          colorEstado={{ ok: "#2F7A4F", "falló": "#B3261E" }}
+          campos={[
+            { key: "fecha", label: "Fecha", tipo: "date" },
+            { key: "tipo", label: "Tipo", tipo: "select", opciones: ["manual", "automático"] },
+            { key: "notas", label: "Notas", ancho: "2 1 220px" }
+          ]} />
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════ CEO ═══════════════════════
+function PanelCEO({ metricas }) {
+  const m = metricas;
+  const fmt = n => (n || 0).toLocaleString("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 });
+  return (
+    <div>
+      <Encabezado area="CEO" titulo="Resumen general" />
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 20 }}>
+        <StatMini n={m.prospectos ?? "…"} l="Prospectos totales" />
+        <StatMini n={m.prospectosCerrados ?? "…"} l="Prospectos cerrados" color="#2F7A4F" />
+        <StatMini n={m.campanasActivas ?? "…"} l="Campañas activas" color={BRASS} />
+        <StatMini n={m.leadsGenerados ?? "…"} l="Leads por campañas" />
+        <StatMini n={m.clientesObra ?? "…"} l="Obras en curso" />
+        <StatMini n={m.ticketsAbiertos ?? "…"} l="Tickets abiertos" color={(m.ticketsAbiertos || 0) > 0 ? "#B3261E" : "#2F7A4F"} />
+        <StatMini n={fmt(m.balance)} l="Balance financiero" color={(m.balance || 0) >= 0 ? "#2F7A4F" : "#B3261E"} />
+        <StatMini n={m.pedidosProducto ?? "…"} l="Pedidos de producto" />
+        <StatMini n={m.incidentesSeguridad ?? "…"} l="Incidentes de seguridad" color={(m.incidentesSeguridad || 0) > 0 ? "#B3261E" : "#2F7A4F"} />
+      </div>
+      <Tarjeta>
+        <div style={{ fontSize: 13, color: SUB, lineHeight: 1.7 }}>
+          Este resumen se arma solo con lo que vas cargando en cada área — Comercial, Marketing,
+          Operaciones, Soporte, Finanzas, Producto y Seguridad. A medida que sumes datos, estos
+          números se actualizan automáticamente al abrir esta pestaña.
+        </div>
+      </Tarjeta>
+    </div>
+  );
+}
+
+function LoginForm({ onLogin }) {
+  const [email, setEmail] = useState("");
+  const [clave, setClave] = useState("");
+  const [error, setError] = useState("");
+  const [cargando, setCargando] = useState(false);
+
+  async function entrar(e) {
+    e.preventDefault();
+    if (!email.trim() || !clave.trim()) return;
+    setCargando(true); setError("");
+    try {
+      await iniciarSesionConCredenciales(email.trim(), clave.trim());
+      onLogin();
+    } catch (err) { setError(err.message); }
+    finally { setCargando(false); }
+  }
+
+  return (
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: NAVY, padding: 20 }}>
+      <form onSubmit={entrar} style={{ background: CARD, borderRadius: 16, padding: "32px 28px", width: "100%", maxWidth: 340 }}>
+        <div style={{ fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 20, marginBottom: 4 }}>V+V <span style={{ color: BRASS }}>Marketing</span></div>
+        <div style={{ fontSize: 12.5, color: MUTE, marginBottom: 22 }}>Centro de Operaciones</div>
+        {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 14 }}>{error}</div>}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <input type="email" placeholder="Correo" value={email} onChange={e => setEmail(e.target.value)} style={campoEstilo} autoCapitalize="none" />
+          <input type="password" placeholder="Contraseña" value={clave} onChange={e => setClave(e.target.value)} style={campoEstilo} />
+          <button type="submit" disabled={cargando} style={{ ...btnBrass, marginTop: 6, opacity: cargando ? 0.6 : 1 }}>{cargando ? "Entrando…" : "Entrar"}</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+async function insertarProspectoPublico(datos) {
+  const r = await fetch(`${SUPA_URL}/rest/v1/prospectos`, {
+    method: "POST",
+    headers: {
+      apikey: SUPA_KEY,
+      Authorization: `Bearer ${SUPA_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal"
+    },
+    body: JSON.stringify(datos)
+  });
+  if (!r.ok) {
+    const txt = await r.text();
+    throw new Error(`${r.status} · ${txt.slice(0, 200)}`);
+  }
+}
+
+// ═══════════════════════ LANDING PÚBLICA ═══════════════════════
+function FormularioContacto() {
+  const [f, setF] = useState({ nombre_contacto: "", email: "", telefono: "", tipo_proyecto: "construcción", zona: "" });
+  const [enviando, setEnviando] = useState(false);
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState("");
+
+  async function enviar(e) {
+    e.preventDefault();
+    if (!f.nombre_contacto.trim()) return;
+    setEnviando(true); setError("");
+    try {
+      await insertarProspectoPublico({ ...f, estado: "nuevo", origen: "web" });
+      setEnviado(true);
+    } catch (err) { setError(err.message); }
+    finally { setEnviando(false); }
+  }
+
+  if (enviado) {
+    return <div style={{ background: "#EAF3EC", color: "#2F7A4F", borderRadius: 6, padding: "16px 18px", fontSize: 14, fontWeight: 600 }}>¡Gracias! Te vamos a contactar a la brevedad.</div>;
+  }
+
+  return (
+    <form onSubmit={enviar} className="form-contacto">
+      {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 6, padding: "9px 12px", fontSize: 12.5 }}>{error}</div>}
+      <input placeholder="Nombre y apellido" value={f.nombre_contacto} onChange={e => setF({ ...f, nombre_contacto: e.target.value })} required />
+      <input type="email" placeholder="Mail" value={f.email} onChange={e => setF({ ...f, email: e.target.value })} />
+      <input placeholder="Teléfono" value={f.telefono} onChange={e => setF({ ...f, telefono: e.target.value })} />
+      <select value={f.tipo_proyecto} onChange={e => setF({ ...f, tipo_proyecto: e.target.value })}>
+        {["construcción", "remodelación", "ampliación", "otro"].map(t => <option key={t} value={t}>{t}</option>)}
+      </select>
+      <input placeholder="Zona" value={f.zona} onChange={e => setF({ ...f, zona: e.target.value })} />
+      <button type="submit" disabled={enviando} className="btn" style={{ marginTop: 4, opacity: enviando ? 0.6 : 1 }}>{enviando ? "Enviando…" : "Contanos tu proyecto"}</button>
+    </form>
+  );
+}
+
+function Landing() {
+  return (
+    <div className="lp">
+      <header>
+        <div className="logo">V<span>+</span>V <span style={{ color: "var(--carbon)", fontWeight: 600, opacity: .5 }}>Construcciones</span></div>
+        <nav>
+          <a href="#servicios">Servicios</a>
+          <a href="#portfolio">Obras</a>
+          <a href="#contacto">Contacto</a>
+        </nav>
+        <a href="#contacto" className="btn">Consultar por tu proyecto</a>
+      </header>
+
+      <div className="hero">
+        <div className="hero-grid">
+          <div>
+            <div className="medida">Zona Sur · Canning · La Plata · City Bell · Quilmes</div>
+            <h1>Construimos<br />lo que <span className="oxido">otros</span><br />solo dibujan.</h1>
+            <p className="lead">Más de 12 años dirigiendo obras en barrios privados y proyectos industriales de la Zona Sur del Gran Buenos Aires. De la primera reunión al último detalle, un mismo equipo lleva tu proyecto de principio a fin.</p>
+            <div className="hero-cta">
+              <a href="#contacto" className="btn">Empezar un proyecto</a>
+              <a href="#portfolio" className="btn-linea">Ver obras realizadas</a>
+            </div>
+          </div>
+          <div className="marco" style={{ aspectRatio: "4/5", overflow: "hidden" }}>
+            <img src="https://ee49b3883c.clvaw-cdnwnd.com/c2ebebd1ca6c6bfa12bfd005fcf362fd/200000530-8961c8961e/700/WhatsApp%20Image%202021-08-03%20at%2014.26.10.jpeg?ph=ee49b3883c" alt="Obra V+V Construcciones" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          </div>
+        </div>
+        <div className="hero-cifras">
+          <div className="cifra"><div className="n">12+</div><div className="l">Años de experiencia</div></div>
+          <div className="cifra"><div className="n">40+</div><div className="l">Obras entregadas</div></div>
+          <div className="cifra"><div className="n">100%</div><div className="l">Seguimiento propio de obra</div></div>
+        </div>
+      </div>
+
+      <section className="servicios" id="servicios">
+        <div className="eyebrow"><span className="num">01</span><span className="txt">Qué construimos</span><span className="raya"></span></div>
+        <h2>Cuatro formas de construir, un mismo estándar de obra.</h2>
+        <div className="grid-servicios">
+          <div className="servicio"><div className="medida">Vivienda</div><h3>Construcción en barrios privados</h3><p>Casas nuevas de principio a fin, con dirección de obra propia y control de cada etapa.</p></div>
+          <div className="servicio"><div className="medida">Industria</div><h3>Naves industriales</h3><p>Galpones y plantas para logística e industria, pensados para producción real.</p></div>
+          <div className="servicio"><div className="medida">Reforma</div><h3>Remodelación y ampliación</h3><p>Ampliamos y renovamos sin frenar la vida de la casa o el negocio.</p></div>
+          <div className="servicio"><div className="medida">Gestión</div><h3>Dirección de obra</h3><p>Coordinamos contratistas, materiales y tiempos — vos ves el avance, no el caos.</p></div>
+        </div>
+      </section>
+
+      <section className="portfolio" id="portfolio">
+        <div className="eyebrow"><span className="num">02</span><span className="txt">Obras</span><span className="raya"></span></div>
+        <h2>Algunos de nuestros proyectos.</h2>
+        <div className="portfolio-grid">
+          <div className="obra"><img className="ph" src="https://ee49b3883c.clvaw-cdnwnd.com/c2ebebd1ca6c6bfa12bfd005fcf362fd/200000005-0c8540c856/IMG_4600.JPG?ph=ee49b3883c" alt="Barrio privado, Zona Sur" /><div className="info"><div className="medida">Barrios privados · Zona Sur</div><h3>Canning</h3></div></div>
+          <div className="obra"><img className="ph" src="https://ee49b3883c.clvaw-cdnwnd.com/c2ebebd1ca6c6bfa12bfd005fcf362fd/200000051-d2d3fd2d41/IMG_0135.jpg?ph=ee49b3883c" alt="Remodelación de vivienda" /><div className="info"><div className="medida">Remodelación</div><h3>City Bell · La Plata</h3></div></div>
+          <div className="obra"><img className="ph" src="https://ee49b3883c.clvaw-cdnwnd.com/c2ebebd1ca6c6bfa12bfd005fcf362fd/200000054-0513b0513d/WhatsApp%20Image%202020-07-16%20at%2008.35.49.jpeg?ph=ee49b3883c" alt="Nave industrial" /><div className="info"><div className="medida">Nave industrial</div><h3>Quilmes</h3></div></div>
+        </div>
+      </section>
+
+      <section className="cita">
+        <div className="eyebrow"><span className="num">03</span><span className="txt">Por qué V+V</span><span className="raya"></span></div>
+        <blockquote>"No tercerizamos la dirección de obra: el mismo equipo que firma el presupuesto es el que está en el pozo todos los días."</blockquote>
+        <div className="firma"><b>V+V Construcciones</b> — Presidente, Sebastián de la Fuente</div>
+      </section>
+
+      <section className="contacto" id="contacto">
+        <div className="eyebrow" style={{ justifyContent: "center" }}><span className="num">04</span><span className="txt">Empecemos</span></div>
+        <h2>¿Tenés un terreno y una idea?</h2>
+        <p>Contanos qué querés construir — te contactamos para coordinar una primera visita, sin compromiso.</p>
+        <FormularioContacto />
+      </section>
+
+      <footer>
+        <div>© 2026 V+V Construcciones — Buenos Aires, Argentina</div>
+        <a href="#operaciones" className="acceso-interno">Acceso interno →</a>
+      </footer>
+    </div>
+  );
+}
+
+// ═══════════════════════ SITIO (rutea landing pública / centro interno) ═══════════════════════
+function Sitio() {
+  const [ruta, setRuta] = useState(window.location.hash);
+  useEffect(() => {
+    const f = () => setRuta(window.location.hash);
+    window.addEventListener("hashchange", f);
+    return () => window.removeEventListener("hashchange", f);
+  }, []);
+  return ruta === "#operaciones" ? <CentroOperaciones /> : <Landing />;
+}
+
+// ═══════════════════════ CONTENEDOR ═══════════════════════
+const AREAS = [
+  { id: "ceo", label: "CEO" },
+  { id: "comercial", label: "Comercial" },
+  { id: "marketing", label: "Marketing" },
+  { id: "operaciones", label: "Operaciones" },
+  { id: "soporte", label: "Soporte" },
+  { id: "finanzas", label: "Finanzas" },
+  { id: "producto", label: "Producto" },
+  { id: "seguridad", label: "Seguridad" }
+];
+
+function CentroOperaciones() {
+  const [autenticado, setAutenticado] = useState(!!tokenGuardado());
+  const [area, setArea] = useState("ceo");
+  const [prospectos, setProspectos] = useState([]);
+  const [campanas, setCampanas] = useState([]);
+  const [clientesObra, setClientesObra] = useState([]);
+  const [ticketsOp, setTicketsOp] = useState([]);
+  const [ticketsSop, setTicketsSop] = useState([]);
+  const [finanzas, setFinanzas] = useState({ ingresos: [], gastos: [] });
+  const [pedidosProducto, setPedidosProducto] = useState([]);
+  const [incidentes, setIncidentes] = useState([]);
+
+  const metricas = {
+    prospectos: prospectos.length,
+    prospectosCerrados: prospectos.filter(p => p.estado === "cerrado").length,
+    campanasActivas: campanas.filter(c => c.estado === "activa").length,
+    leadsGenerados: campanas.reduce((a, c) => a + Number(c.leads_generados || 0), 0),
+    clientesObra: clientesObra.filter(c => c.etapa !== "entregada").length,
+    ticketsAbiertos: ticketsOp.filter(t => t.estado === "abierto").length + ticketsSop.filter(t => t.estado === "abierto").length,
+    balance: finanzas.ingresos.reduce((a, x) => a + Number(x.monto || 0), 0) - finanzas.gastos.reduce((a, x) => a + Number(x.monto || 0), 0),
+    pedidosProducto: pedidosProducto.filter(p => p.estado !== "resuelto").length,
+    incidentesSeguridad: incidentes.filter(i => i.estado === "abierto").length
+  };
+
+  if (!autenticado) return <LoginForm onLogin={() => setAutenticado(true)} />;
+
+  return (
+    <div style={{ minHeight: "100vh" }}>
+      <div style={{ background: NAVY, padding: "14px 20px" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", color: "#fff", fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: 17 }}>
+          V+V <span style={{ color: BRASS }}>Marketing</span>
+        </div>
+      </div>
+      <div style={{ background: "#0D1420", padding: "10px 20px", overflowX: "auto" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", gap: 6 }}>
+          {AREAS.map(a => (
+            <button key={a.id} onClick={() => setArea(a.id)} style={{
+              border: "none", borderRadius: 20, padding: "8px 16px", fontSize: 12, fontWeight: 700, whiteSpace: "nowrap",
+              background: area === a.id ? BRASS : "transparent", color: area === a.id ? "#fff" : "#B7BFCC"
+            }}>{a.label}</button>
+          ))}
+        </div>
+      </div>
+      <div style={{ maxWidth: 1000, margin: "0 auto", padding: "28px 20px" }}>
+        {area === "ceo" && <PanelCEO metricas={metricas} />}
+        {area === "comercial" && <PanelComercial onData={setProspectos} />}
+        {area === "marketing" && <PanelMarketing onCampanas={setCampanas} />}
+        {area === "operaciones" && <PanelOperaciones onData={setClientesObra} />}
+        {area === "soporte" && <PanelSoporte onData={setTicketsSop} />}
+        {area === "finanzas" && <PanelFinanzas onData={setFinanzas} />}
+        {area === "producto" && <PanelProducto onData={setPedidosProducto} />}
+        {area === "seguridad" && <PanelSeguridad onData={setIncidentes} />}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.render(<Sitio />, document.getElementById("root"));
+</script>
+</body>
+</html>
