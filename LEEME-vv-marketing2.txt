@@ -1,0 +1,35 @@
+V+V MARKETING · Arreglo: pantalla en blanco
+════════════════════════════════════════════
+
+QUÉ PASABA:
+La primera versión usaba 3 librerías cargadas desde internet en el
+momento (React, ReactDOM, y Babel — este último para traducir el
+código en vivo, en el navegador). Si Babel no llegaba a cargar
+bien en tu conexión, la página se quedaba completamente en blanco,
+sin ningún aviso de error.
+
+QUÉ ARREGLÉ:
+Traduje el código yo mismo, de antemano, en vez de dejar que el
+navegador lo haga. Ahora la página solo depende de 2 librerías
+(React y ReactDOM) — es exactamente el mismo método que usa NEXO,
+que ya sabemos que funciona bien en tu conexión.
+
+CÓMO SUBIR:
+Reemplazá el index.html en tu repo de GitHub (familiadelafuente1942-afk/marketingvv)
+con este archivo — mismo cuidado de siempre: "Add file → Upload files",
+nunca el lápiz de editar, y confirmá que el nombre quede exacto
+"index.html".
+
+VERIFICADO ANTES DE ENTREGAR:
+- Traducido con Babel real (no a mano), para no introducir errores
+  de tipeo en la conversión.
+- El código resultante revisado con Node, sin errores.
+- Confirmé que no quedó ningún rastro del sistema de módulos que
+  rompía todo (jsxDEV, import) — quedó limpio, con React.createElement
+  directo, igual que NEXO.
+
+CÓMO PROBAR:
+Después de subir, entrá a marketingvv.vercel.app — esta vez debería
+verse el encabezado azul oscuro "V+V Marketing" y, debajo, el panel
+de Comercial (te va a pedir correo/contraseña la primera vez:
+vvconstrucciones@yahoo.com.ar).
