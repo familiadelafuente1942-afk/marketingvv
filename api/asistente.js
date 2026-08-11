@@ -16,13 +16,34 @@ ${activa}
 DATOS DE LA OTRA MARCA DE LA MISMA FAMILIA (por si se menciona o hay sinergia entre las dos):
 ${otra}
 
-Tu rol: sos el motor de marketing y ventas más efectivo posible para conseguir clientes a "${marca}" — redactás mensajes, publicaciones, mails, priorizás prospectos, sugerís estrategias de contacto y campañas, siempre con un tono cordial en español rioplatense. Tenés herramienta de búsqueda web activa: usala sin dudar cada vez que la respuesta se beneficie de información actual o real de internet (precios, datos de empresas públicas, contactos publicados, tendencias, noticias del rubro, etc.) — nunca digas que no podés buscar en internet, porque sí podés. Trabajás exclusivamente con información pública y canales legales (nunca sugerís ni facilitás scraping de datos personales, acceso no autorizado a grupos privados, ni recolección de datos de individuos sin consentimiento — si te piden eso, explicá brevemente por qué no y ofrecé la alternativa legal). Sé directo y concreto: andá al grano con lo que te piden, sin preámbulos innecesarios.
+Tu rol: sos el motor de marketing y ventas más efectivo posible para conseguir clientes a "${marca}" — redactás mensajes, publicaciones, mails, priorizás prospectos, sugerís estrategias de contacto y campañas, siempre con un tono cordial en español rioplatense. Tenés herramienta de búsqueda web activa: usala sin dudar cada vez que la respuesta se beneficie de información actual o real de internet (precios, datos de empresas públicas, contactos publicados, tendencias, noticias del rubro, etc.) — nunca digas que no podés buscar en internet, porque sí podés. Trabajás exclusivamente con información pública y canales legales (nunca sugerís ni facilitás scraping de datos personales, acceso no autorizado a grupos privados, ni recolección de datos de individuos sin consentimiento — si te piden eso, explicá brevemente por qué no y ofrecé la alternativa legal). Sé directo y concreto: andá al grano con lo que te piden, sin preámbulos innecesarios.`;
+}
 
-IMPORTANTE — carga automática a la base de datos: cada vez que en tu respuesta menciones una o más empresas/organizaciones reales con al menos un dato de contacto (sitio web, teléfono o mail), agregá AL FINAL de tu respuesta (después de todo el texto normal que lee la persona) un bloque exactamente con este formato, sin nada más alrededor:
-<<EMPRESAS_ENCONTRADAS>>
-[{"nombre":"...","categoria":"...","zona":"...","sitio_web":"...","telefono":"...","email":"...","fuente":"..."}]
-<<FIN_EMPRESAS>>
-Usá categoria y zona lo más específicas posible según lo que se haya pedido (ej: "desarrollador inmobiliario", "GBA Sur"). Si un dato no lo tenés, dejalo como cadena vacía "". Si tu respuesta no menciona ninguna empresa con datos de contacto, no incluyas ese bloque para nada.`;
+async function extraerEmpresas(apiKey, textoRespuesta) {
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1500,
+        system: `Tu única tarea: leer el texto que te pasan y extraer las empresas/organizaciones reales mencionadas que tengan al menos un dato de contacto (sitio web, teléfono o mail). Respondé ÚNICAMENTE con un array JSON, sin texto antes ni después, sin backticks de markdown: [{"nombre":"...","categoria":"...","zona":"...","sitio_web":"...","telefono":"...","email":"...","fuente":"..."}]. Si un dato no está, dejalo como "". Si no hay ninguna empresa con datos de contacto, respondé exactamente: []`,
+        messages: [{ role: "user", content: textoRespuesta }]
+      })
+    });
+    if (!r.ok) return [];
+    const data = await r.json();
+    const texto = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
+    const limpio = texto.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const parseado = JSON.parse(limpio);
+    return Array.isArray(parseado) ? parseado.filter(e => e && e.nombre) : [];
+  } catch (e) {
+    return [];
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -80,21 +101,12 @@ module.exports = async function handler(req, res) {
       return res.status(r.status).json({ error: data?.error?.message || "Error de la API de Anthropic" });
     }
 
-    const textoCompleto = (data.content || [])
+    const texto = (data.content || [])
       .filter(b => b.type === "text")
       .map(b => b.text)
       .join("\n");
 
-    let texto = textoCompleto;
-    let empresas = [];
-    const match = textoCompleto.match(/<<EMPRESAS_ENCONTRADAS>>([\s\S]*?)<<FIN_EMPRESAS>>/);
-    if (match) {
-      texto = textoCompleto.replace(match[0], "").trim();
-      try {
-        const parseado = JSON.parse(match[1].trim());
-        if (Array.isArray(parseado)) empresas = parseado.filter(e => e && e.nombre);
-      } catch (e) { /* si no parsea, seguimos sin empresas */ }
-    }
+    const empresas = await extraerEmpresas(apiKey, texto);
 
     return res.status(200).json({ texto, empresas });
   } catch (e) {
