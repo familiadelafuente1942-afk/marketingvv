@@ -292,7 +292,8 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
     const primero = campos[0].key;
     if (!String(f[primero] || "").trim()) return;
     try {
-      const [fila] = await vvFetch(tabla, { method: "POST", body: JSON.stringify(f) });
+      const body = filtro ? { ...f, [filtro.campo]: filtro.valor } : f;
+      const [fila] = await vvFetch(tabla, { method: "POST", body: JSON.stringify(body) });
       const nuevas = [fila, ...filas];
       setFilas(nuevas);
       if (onData) onData(nuevas);
@@ -1419,6 +1420,7 @@ const ZONAS_PROSPECCION = ["CABA", "GBA Norte", "GBA Oeste", "GBA Sur", "La Plat
 const CATEGORIAS_PROSPECCION = ["estudio de arquitectura", "desarrollador inmobiliario", "gerenciadora de obra"];
 
 function PanelProspeccion({ onData }) {
+  const [marca, setMarca] = useState("V+V Construcciones");
   const [zonas, setZonas] = useState(["GBA Sur"]);
   const [categorias, setCategorias] = useState(["estudio de arquitectura"]);
   const [corriendo, setCorriendo] = useState(false);
@@ -1462,7 +1464,7 @@ function PanelProspeccion({ onData }) {
             try {
               await vvFetch("socios_prospectados", {
                 method: "POST", headers: { Prefer: "return=minimal" },
-                body: JSON.stringify({ nombre: e.nombre, categoria, zona, sitio_web: e.sitio_web || "", telefono: e.telefono || "", email: e.email || "", fuente: e.fuente || "" })
+                body: JSON.stringify({ nombre: e.nombre, marca, categoria, zona, sitio_web: e.sitio_web || "", telefono: e.telefono || "", email: e.email || "", fuente: e.fuente || "" })
               });
               total++;
               setEncontrados(total);
@@ -1487,6 +1489,7 @@ function PanelProspeccion({ onData }) {
   return (
     <div>
       <Encabezado area="Prospección" titulo="Buscar estudios y constructoras socias" />
+      <SubTabs tabs={[{ id: "V+V Construcciones", label: "V+V Construcciones" }, { id: "VIP Deco & Home", label: "VIP Deco & Home" }]} actual={marca} onCambiar={setMarca} />
       <Tarjeta style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 13, color: SUB, marginBottom: 16 }}>
           Elegí dónde y a quién buscar. Se recorre cada combinación de zona/categoría revisando
@@ -1537,7 +1540,8 @@ function PanelProspeccion({ onData }) {
         )}
       </Tarjeta>
 
-      <ListaGenerica key={refrescar} tabla="socios_prospectados" etiqueta="empresa" onData={onData}
+      <ListaGenerica key={marca + "-" + refrescar} tabla="socios_prospectados" etiqueta="empresa" onData={onData}
+        filtro={{ campo: "marca", valor: marca }}
         estadoCampo="estado" estadoOpciones={["nuevo", "contactado", "respondió", "acuerdo"]}
         colorEstado={{ nuevo: "#4A5565", contactado: "#9A6B1E", "respondió": "#3B6CA8", acuerdo: "#2F7A4F" }}
         campos={[

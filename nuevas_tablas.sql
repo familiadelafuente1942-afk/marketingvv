@@ -27,6 +27,7 @@ create policy "config_marca_solo_dueno_escribe" on config_marca
 create table if not exists socios_prospectados (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
+  marca text default 'V+V Construcciones',
   categoria text default 'estudio de arquitectura',
   zona text,
   sitio_web text,
@@ -36,6 +37,7 @@ create table if not exists socios_prospectados (
   estado text default 'nuevo',
   creado timestamptz default now()
 );
+alter table socios_prospectados add column if not exists marca text default 'V+V Construcciones';
 
 -- MARKETING ────────────────────────────────────────────────────
 create table if not exists campanas (
