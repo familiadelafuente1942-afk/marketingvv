@@ -1,0 +1,31 @@
+V+V MARKETING · Diagnóstico visible + arreglo de CDN
+══════════════════════════════════════════════════════
+
+QUÉ AGREGUÉ ESTA VEZ:
+
+1. Un cartel que aparece DIRECTO EN LA PANTALLA si algo falla
+   (antes solo se veía en la consola del navegador, que en el
+   iPad no es fácil de abrir). Si algo se rompe, ahora vas a ver
+   el error escrito ahí mismo, con el mensaje exacto — mandame una
+   foto de eso si vuelve a pasar, y ahí sí sabemos con certeza qué
+   corregir, sin adivinar más.
+
+2. Agregué "crossorigin" a los dos scripts externos (React y
+   ReactDOM) — es lo que la documentación oficial de React
+   recomienda, y hace que si algo falla ahí, el navegador muestre
+   el error real en vez de un mensaje genérico sin información.
+
+CÓMO SUBIR:
+Reemplazá el index.html en tu repo (mismo cuidado de siempre:
+"Add file → Upload files", nunca el lápiz, nombre exacto).
+
+CÓMO PROBAR:
+Entrá a marketingvv.vercel.app. Si funciona, vas a ver el
+encabezado azul "V+V Marketing" y el panel de Comercial debajo.
+Si NO funciona, esta vez va a aparecer un cartel oscuro con el
+error escrito — mandame una foto de ESO específicamente.
+
+VERIFICADO ANTES DE ENTREGAR:
+- Código revisado con Node, sin errores de sintaxis.
+- Confirmé con búsqueda que "crossorigin" es la práctica oficial
+  recomendada por React para scripts cargados desde un CDN.
