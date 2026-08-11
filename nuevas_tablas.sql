@@ -4,10 +4,30 @@
 -- Acceso restringido a: vvconstrucciones@yahoo.com.ar
 -- ═══════════════════════════════════════════════════════════════
 
+-- DISEÑO (personalización de cada marca — logo, colores) ────
+create table if not exists config_marca (
+  marca text primary key,
+  color_acento text,
+  color_fondo text,
+  logo_data_uri text,
+  actualizado timestamptz default now()
+);
+alter table config_marca enable row level security;
+drop policy if exists "config_marca_lectura_publica" on config_marca;
+create policy "config_marca_lectura_publica" on config_marca
+  for select to anon
+  using (true);
+drop policy if exists "config_marca_solo_dueno_escribe" on config_marca;
+create policy "config_marca_solo_dueno_escribe" on config_marca
+  for all to authenticated
+  using (auth.jwt()->>'email' = 'vvconstrucciones@yahoo.com.ar')
+  with check (auth.jwt()->>'email' = 'vvconstrucciones@yahoo.com.ar');
+
 -- MARKETING ────────────────────────────────────────────────────
 create table if not exists campanas (
   id uuid primary key default gen_random_uuid(),
   nombre text not null,
+  marca text default 'V+V Construcciones',
   canal text default 'instagram',
   estado text default 'planificada',
   presupuesto numeric default 0,
@@ -17,6 +37,7 @@ create table if not exists campanas (
   fecha_fin date,
   creado timestamptz default now()
 );
+alter table campanas add column if not exists marca text default 'V+V Construcciones';
 
 create table if not exists contenido (
   id uuid primary key default gen_random_uuid(),
@@ -33,6 +54,16 @@ create table if not exists competencia (
   nombre text not null,
   notas text,
   ultima_revision date,
+  creado timestamptz default now()
+);
+
+create table if not exists grupos_barrios (
+  id uuid primary key default gen_random_uuid(),
+  barrio text not null,
+  tipo text default 'comercial/ventas',
+  contacto text,
+  estado text default 'por pedir acceso',
+  ultima_publicacion date,
   creado timestamptz default now()
 );
 
@@ -140,7 +171,7 @@ do $$
 declare
   t text;
   tablas text[] := array[
-    'campanas','contenido','competencia','clientes_obra',
+    'campanas','contenido','competencia','grupos_barrios','clientes_obra',
     'tickets_operaciones','tickets_soporte','faq',
     'finanzas_ingresos','finanzas_gastos','producto_pedidos',
     'seguridad_incidentes','seguridad_respaldos'
