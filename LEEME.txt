@@ -1,0 +1,40 @@
+V+V MARKETING · Primera versión (Comercial)
+════════════════════════════════════════════
+
+QUÉ ES:
+Una app nueva, chica y liviana (no pesa 2.5 MB como NEXO — esta
+por ahora es de unos 15 KB), pensada exclusivamente para conseguir
+clientes nuevos para V+V Construcciones. Separada del todo de
+NEXO — apunta a tu proyecto de Supabase "v+vmarketing".
+
+QUÉ TIENE POR AHORA:
+Solo el área Comercial: una lista de contactos/prospectos que
+podrían querer construir con V+V (nombre, empresa si aplica, mail,
+teléfono, tipo de proyecto, zona, estado). Podés agregar, cambiar
+estado, y borrar.
+
+QUÉ YA TRAE INCORPORADO DESDE EL PRIMER DÍA (todo lo que aprendimos
+hoy con NEXO, para no repetir los mismos problemas):
+- Sesión que se renueva sola (no se corta cada 1 hora).
+- Permisos restringidos a tu correo desde el arranque (nadie más
+  puede ver estos datos, ni aunque se cree una cuenta).
+- Lectura seguraa de respuestas vacías (el arreglo del bug de
+  Safari que encontramos con NEXO).
+
+CÓMO PUBLICARLO:
+Vas a necesitar:
+1. Un repositorio nuevo en GitHub (separado del de NEXO)
+2. Subir este index.html ahí
+3. Conectarlo a Vercel (o el mismo método que usamos para NEXO)
+
+Avisame cuando quieras armar el repo y lo hacemos juntos, paso a
+paso, como la primera vez.
+
+VERIFICADO ANTES DE ENTREGAR:
+- JSX validado con Babel (compilación real), sin errores.
+- JavaScript resultante revisado con Node, sin errores.
+- No se pudo hacer una prueba de render completa en este entorno
+  porque no tiene salida a internet hacia las librerías (React,
+  Babel) que la página carga desde afuera — eso se va a poder
+  confirmar recién cuando la app esté publicada de verdad. Avisame
+  apenas la veas funcionando (o si algo falla) para ajustar rápido.
