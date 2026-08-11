@@ -1198,17 +1198,19 @@ async function preguntarleAlAsistente(mensajes, marca) {
     throw new Error(`Respuesta no-JSON (status ${r.status}): ${textoCrudo.slice(0, 300)}`);
   }
   if (!r.ok) throw new Error(`(status ${r.status}) ${data.error || "Error del asistente"}`);
-  return data.texto;
+  return { texto: data.texto, empresas: data.empresas || [] };
 }
 
 function PanelAsistente({ prospectos, campanas, grupos, marca }) {
   const [mensajes, setMensajes] = useState([]); // [{ role: "user"|"assistant", contenido }]
+  const [cargandoHistorial, setCargandoHistorial] = useState(true);
   const [prompt, setPrompt] = useState("");
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
   const [copiadoIdx, setCopiadoIdx] = useState(null);
   const [escuchando, setEscuchando] = useState(false);
   const [hablandoIdx, setHablandoIdx] = useState(null);
+  const [nota, setNota] = useState("");
   const reconocimientoRef = React.useRef(null);
   const utteranceRef = React.useRef(null);
   const timeoutSeguridadRef = React.useRef(null);
@@ -1218,6 +1220,22 @@ function PanelAsistente({ prospectos, campanas, grupos, marca }) {
   const MotorVoz = window.SpeechRecognition || window.webkitSpeechRecognition;
   const soportaDictado = !!MotorVoz;
   const soportaLectura = !!window.speechSynthesis;
+
+  async function cargarHistorial() {
+    setCargandoHistorial(true);
+    try {
+      const filas = await vvFetch(`chat_mensajes?marca=eq.${encodeURIComponent(marca)}&select=*&order=creado.asc&limit=200`);
+      setMensajes((filas || []).map(f => ({ role: f.role, contenido: f.contenido })));
+    } catch (e) { /* si falla, arrancamos con historial vacío */ }
+    finally { setCargandoHistorial(false); }
+  }
+  useEffect(() => { cargarHistorial(); }, [marca]);
+
+  async function guardarMensaje(role, contenido) {
+    try {
+      await vvFetch("chat_mensajes", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ marca, role, contenido }) });
+    } catch (e) { /* si falla el guardado, el chat sigue andando igual en esta sesión */ }
+  }
 
   useEffect(() => {
     if (finRef.current) finRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -1286,17 +1304,38 @@ function PanelAsistente({ prospectos, campanas, grupos, marca }) {
     const historialNuevo = [...mensajes, { role: "user", contenido: limpio }];
     setMensajes(historialNuevo);
     setPrompt("");
-    setCargando(true); setError("");
+    setCargando(true); setError(""); setNota("");
+    guardarMensaje("user", limpio);
     try {
-      const respuesta = await preguntarleAlAsistente(historialNuevo, marca);
+      const { texto: respuesta, empresas } = await preguntarleAlAsistente(historialNuevo, marca);
       setMensajes(h => [...h, { role: "assistant", contenido: respuesta }]);
+      guardarMensaje("assistant", respuesta);
+      if (empresas && empresas.length > 0) {
+        let guardadas = 0;
+        for (const e of empresas) {
+          try {
+            await vvFetch("socios_prospectados", {
+              method: "POST", headers: { Prefer: "return=minimal" },
+              body: JSON.stringify({
+                nombre: e.nombre, marca,
+                categoria: e.categoria || "desde asistente",
+                zona: e.zona || "",
+                sitio_web: e.sitio_web || "", telefono: e.telefono || "", email: e.email || "", fuente: e.fuente || "chat del asistente"
+              })
+            });
+            guardadas++;
+          } catch (err) { /* puede ser duplicado, seguimos */ }
+        }
+        if (guardadas > 0) setNota(`✓ Se guardaron ${guardadas} empresa${guardadas === 1 ? "" : "s"} en Prospección.`);
+      }
     } catch (e) { setError(e.message); }
     finally { setCargando(false); }
   }
 
-  function nuevaConversacion() {
+  async function nuevaConversacion() {
     detenerLectura();
-    setMensajes([]); setPrompt(""); setError("");
+    setMensajes([]); setPrompt(""); setError(""); setNota("");
+    try { await vvFetch(`chat_mensajes?marca=eq.${encodeURIComponent(marca)}`, { method: "DELETE", headers: { Prefer: "return=minimal" } }); } catch (e) {}
   }
 
   function accionGrupoPendiente() {
@@ -1336,7 +1375,8 @@ function PanelAsistente({ prospectos, campanas, grupos, marca }) {
 
       <Tarjeta style={{ display: "flex", flexDirection: "column", padding: 0, overflow: "hidden" }}>
         <div style={{ maxHeight: 460, overflowY: "auto", padding: "18px 18px 4px" }}>
-          {mensajes.length === 0 && !cargando && (
+          {cargandoHistorial && <div style={{ fontSize: 12.5, color: MUTE, padding: "10px 0" }}>Cargando conversación anterior…</div>}
+          {!cargandoHistorial && mensajes.length === 0 && !cargando && (
             <div style={{ fontSize: 12.5, color: MUTE, padding: "10px 0" }}>Empezá a escribir o tocá 🎙️ Hablarle para arrancar la conversación.</div>
           )}
           {mensajes.map((m, i) => (
@@ -1367,6 +1407,7 @@ function PanelAsistente({ prospectos, campanas, grupos, marca }) {
           <div ref={finRef} />
         </div>
 
+        {nota && <div style={{ background: "#EAF3EC", color: "#2F7A4F", borderRadius: 9, padding: "9px 12px", fontSize: 12, margin: "0 18px 14px" }}>{nota}</div>}
         {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, margin: "0 18px 14px" }}>{error}</div>}
 
         <div style={{ borderTop: `1px solid ${BORDER}`, padding: 14, display: "flex", gap: 8, alignItems: "flex-end" }}>
