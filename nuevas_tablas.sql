@@ -23,6 +23,20 @@ create policy "config_marca_solo_dueno_escribe" on config_marca
   using (auth.jwt()->>'email' = 'vvconstrucciones@yahoo.com.ar')
   with check (auth.jwt()->>'email' = 'vvconstrucciones@yahoo.com.ar');
 
+-- PROSPECCIÓN DE SOCIOS (estudios de arquitectura / constructoras) ─
+create table if not exists socios_prospectados (
+  id uuid primary key default gen_random_uuid(),
+  nombre text not null,
+  categoria text default 'estudio de arquitectura',
+  zona text,
+  sitio_web text,
+  telefono text,
+  email text,
+  fuente text,
+  estado text default 'nuevo',
+  creado timestamptz default now()
+);
+
 -- MARKETING ────────────────────────────────────────────────────
 create table if not exists campanas (
   id uuid primary key default gen_random_uuid(),
@@ -171,7 +185,7 @@ do $$
 declare
   t text;
   tablas text[] := array[
-    'campanas','contenido','competencia','grupos_barrios','clientes_obra',
+    'campanas','contenido','competencia','grupos_barrios','clientes_obra','socios_prospectados',
     'tickets_operaciones','tickets_soporte','faq',
     'finanzas_ingresos','finanzas_gastos','producto_pedidos',
     'seguridad_incidentes','seguridad_respaldos'
