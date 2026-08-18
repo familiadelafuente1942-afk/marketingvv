@@ -1716,6 +1716,192 @@ function PanelProspeccion({ onData, marca }) {
   );
 }
 
+// ═══════════════════════ MAILS ═══════════════════════
+function PanelMails({ marca }) {
+  const [sub, setSub] = useState("nuevo");
+  const [prospectos, setProspectos] = useState([]);
+  const [socios, setSocios] = useState([]);
+  const [cargandoContactos, setCargandoContactos] = useState(true);
+  const [seleccionados, setSeleccionados] = useState({});
+  const [remitente, setRemitente] = useState("");
+  const [asunto, setAsunto] = useState("");
+  const [cuerpo, setCuerpo] = useState("");
+  const [enviando, setEnviando] = useState(false);
+  const [error, setError] = useState("");
+  const [resultado, setResultado] = useState("");
+  const [historial, setHistorial] = useState([]);
+  const [cargandoHistorial, setCargandoHistorial] = useState(true);
+
+  async function cargarContactos() {
+    setCargandoContactos(true);
+    try {
+      const [p, s] = await Promise.all([
+        vvFetch("prospectos?select=*&order=creado.desc&limit=300"),
+        vvFetch("socios_prospectados?select=*&order=creado.desc&limit=300")
+      ]);
+      setProspectos((p || []).filter(x => (x.marca || "V+V Construcciones") === marca && x.email));
+      setSocios((s || []).filter(x => (x.marca || "V+V Construcciones") === marca && x.email));
+    } catch (e) { setError(e.message); }
+    finally { setCargandoContactos(false); }
+  }
+  async function cargarHistorial() {
+    setCargandoHistorial(true);
+    try {
+      const h = await vvFetch(`emails_enviados?marca=eq.${encodeURIComponent(marca)}&select=*&order=creado.desc&limit=300`);
+      setHistorial(h || []);
+    } catch (e) { /* silencioso */ }
+    finally { setCargandoHistorial(false); }
+  }
+  useEffect(() => { cargarContactos(); cargarHistorial(); setSeleccionados({}); }, [marca]);
+
+  const todosContactos = [
+    ...prospectos.map(p => ({ id: "p-" + p.id, email: p.email, nombre: p.nombre_contacto || p.empresa || p.email, origen: "Comercial" })),
+    ...socios.map(s => ({ id: "s-" + s.id, email: s.email, nombre: s.nombre, origen: "Prospección" }))
+  ];
+
+  function alternarSeleccion(id) {
+    setSeleccionados(s => ({ ...s, [id]: !s[id] }));
+  }
+  function seleccionarTodos() {
+    const todos = {};
+    todosContactos.forEach(c => { todos[c.id] = true; });
+    setSeleccionados(todos);
+  }
+  function deseleccionarTodos() { setSeleccionados({}); }
+
+  const elegidos = todosContactos.filter(c => seleccionados[c.id]);
+
+  async function enviar() {
+    if (!remitente.trim() || !asunto.trim() || !cuerpo.trim() || elegidos.length === 0) {
+      setError("Completá remitente, asunto, cuerpo, y elegí al menos un destinatario.");
+      return;
+    }
+    setEnviando(true); setError(""); setResultado("");
+    try {
+      const cuerpoHtml = cuerpo.split("\n").map(l => `<p>${l || "&nbsp;"}</p>`).join("");
+      const r = await fetch("/api/enviar-mail", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          remitente,
+          destinatarios: elegidos.map(c => ({ email: c.email, nombre: c.nombre })),
+          asunto, cuerpoHtml
+        })
+      });
+      const textoCrudo = await r.text();
+      let data;
+      try { data = JSON.parse(textoCrudo); }
+      catch (e) { throw new Error(`Respuesta no-JSON (status ${r.status}): ${textoCrudo.slice(0, 300)}`); }
+      if (!r.ok) throw new Error(`(status ${r.status}) ${data.error || "Error al enviar"}`);
+
+      for (const res of data.resultados) {
+        try {
+          await vvFetch("emails_enviados", {
+            method: "POST", headers: { Prefer: "return=minimal" },
+            body: JSON.stringify({
+              marca, destinatario: res.email, destinatario_nombre: res.nombre,
+              asunto, cuerpo, resend_id: res.resend_id, estado: res.resend_id ? "enviado" : "error"
+            })
+          });
+        } catch (e) { /* seguimos con el resto */ }
+      }
+      setResultado(`✓ Enviado a ${data.resultados.filter(r => r.resend_id).length} de ${elegidos.length} destinatarios.`);
+      setSeleccionados({}); setAsunto(""); setCuerpo("");
+      cargarHistorial();
+    } catch (e) { setError(e.message); }
+    finally { setEnviando(false); }
+  }
+
+  const totalEnviados = historial.length;
+  const abiertos = historial.filter(h => h.estado === "abierto" || h.estado === "click").length;
+  const clicks = historial.filter(h => h.estado === "click").length;
+  const rebotados = historial.filter(h => h.estado === "rebotado").length;
+  const tasaApertura = totalEnviados ? Math.round((abiertos / totalEnviados) * 100) : 0;
+  const tasaClick = totalEnviados ? Math.round((clicks / totalEnviados) * 100) : 0;
+
+  const COLOR_ESTADO_MAIL = { enviado: "#4A5565", entregado: "#3B6CA8", abierto: "#9A6B1E", click: "#2F7A4F", rebotado: "#B3261E", error: "#B3261E" };
+
+  return (
+    <div>
+      <Encabezado area="Mails" titulo="Envíos y seguimiento" />
+      <SubTabs tabs={[{ id: "nuevo", label: "Nuevo envío" }, { id: "historial", label: "Historial y métricas" }]} actual={sub} onCambiar={setSub} />
+
+      {sub === "nuevo" && (
+        <div>
+          <Tarjeta style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Remitente</div>
+            <input value={remitente} onChange={e => setRemitente(e.target.value)} placeholder="ej: ventas@vvconstruccionesweb.com (debe ser un dominio verificado en Resend)"
+              style={{ ...campoEstilo, width: "100%", marginBottom: 14 }} />
+            <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Asunto</div>
+            <input value={asunto} onChange={e => setAsunto(e.target.value)} placeholder="Asunto del mail"
+              style={{ ...campoEstilo, width: "100%", marginBottom: 14 }} />
+            <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Cuerpo</div>
+            <textarea value={cuerpo} onChange={e => setCuerpo(e.target.value)} placeholder="Escribí el mensaje…"
+              style={{ width: "100%", minHeight: 140, padding: 12, borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
+          </Tarjeta>
+
+          <Tarjeta style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>{elegidos.length} de {todosContactos.length} contacto{todosContactos.length === 1 ? "" : "s"} con mail seleccionado{elegidos.length === 1 ? "" : "s"}</div>
+              <button onClick={seleccionarTodos} style={{ ...btnNuevo, marginLeft: "auto" }}>Todos</button>
+              <button onClick={deseleccionarTodos} style={btnNuevo}>Ninguno</button>
+            </div>
+            {cargandoContactos ? <div style={{ fontSize: 12.5, color: MUTE }}>Cargando contactos…</div> :
+              todosContactos.length === 0 ? <div style={{ fontSize: 12.5, color: MUTE }}>No hay contactos con mail cargado en Comercial ni Prospección para {marca}.</div> :
+              <div style={{ maxHeight: 260, overflowY: "auto" }}>
+                {todosContactos.map(c => (
+                  <label key={c.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 4px", borderBottom: `1px solid #EEF0F3`, fontSize: 12.5, cursor: "pointer" }}>
+                    <input type="checkbox" checked={!!seleccionados[c.id]} onChange={() => alternarSeleccion(c.id)} />
+                    <div style={{ flex: 1 }}>{c.nombre} <span style={{ color: MUTE }}>— {c.email}</span></div>
+                    <div style={{ fontSize: 10.5, color: MUTE }}>{c.origen}</div>
+                  </label>
+                ))}
+              </div>}
+          </Tarjeta>
+
+          {error && <div style={{ background: "#FDECEA", color: "#B3261E", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 14 }}>{error}</div>}
+          {resultado && <div style={{ background: "#EAF3EC", color: "#2F7A4F", borderRadius: 9, padding: "9px 12px", fontSize: 12, marginBottom: 14 }}>{resultado}</div>}
+
+          <button onClick={enviar} disabled={enviando} style={{ ...btnBrass, width: "100%", padding: "13px 22px", opacity: enviando ? 0.6 : 1 }}>
+            {enviando ? "Enviando…" : `✉ Enviar a ${elegidos.length} destinatario${elegidos.length === 1 ? "" : "s"}`}
+          </button>
+        </div>
+      )}
+
+      {sub === "historial" && (
+        <div>
+          <div style={{ display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap" }}>
+            <StatMini n={totalEnviados} l="Mails enviados" />
+            <StatMini n={`${tasaApertura}%`} l="Tasa de apertura" color="#9A6B1E" />
+            <StatMini n={`${tasaClick}%`} l="Tasa de click" color="#2F7A4F" />
+            <StatMini n={rebotados} l="Rebotados" color={rebotados > 0 ? "#B3261E" : NAVY} />
+          </div>
+          <Tarjeta>
+            {cargandoHistorial ? <div style={{ fontSize: 12.5, color: MUTE }}>Cargando…</div> :
+              historial.length === 0 ? <div style={{ fontSize: 12.5, color: MUTE }}>Todavía no enviaste mails para {marca}.</div> :
+              <div style={{ overflowX: "auto" }}>
+                <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                  <thead><tr>
+                    <th style={th}>Destinatario</th><th style={th}>Asunto</th><th style={th}>Estado</th><th style={th}>Enviado</th>
+                  </tr></thead>
+                  <tbody>
+                    {historial.map(h => (
+                      <tr key={h.id}>
+                        <td style={td}><div>{h.destinatario_nombre || "—"}</div><div style={{ fontSize: 10.5, color: MUTE }}>{h.destinatario}</div></td>
+                        <td style={td}>{h.asunto}</td>
+                        <td style={td}><span style={{ color: COLOR_ESTADO_MAIL[h.estado] || NAVY, fontWeight: 700, fontSize: 11.5 }}>{h.estado}</span></td>
+                        <td style={td}>{h.fecha_envio ? new Date(h.fecha_envio).toLocaleDateString("es-AR") : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>}
+          </Tarjeta>
+        </div>
+      )}
+    </div>
+  );
+}
+
 const AREAS = [
   { id: "ceo", label: "CEO" },
   { id: "comercial", label: "Comercial" },
@@ -1724,6 +1910,7 @@ const AREAS = [
   { id: "operaciones", label: "Operaciones" },
   { id: "soporte", label: "Soporte" },
   { id: "finanzas", label: "Finanzas" },
+  { id: "mails", label: "Mails" },
   { id: "producto", label: "Producto" },
   { id: "seguridad", label: "Seguridad" },
   { id: "asistente", label: "Asistente IA" },
@@ -1802,6 +1989,7 @@ function CentroOperaciones() {
         {area === "operaciones" && <PanelOperaciones onData={setClientesObra} />}
         {area === "soporte" && <PanelSoporte onData={setTicketsSop} />}
         {area === "finanzas" && <PanelFinanzas onData={setFinanzas} marca={marca} />}
+        {area === "mails" && <PanelMails marca={marca} />}
         {area === "producto" && <PanelProducto onData={setPedidosProducto} />}
         {area === "seguridad" && <PanelSeguridad onData={setIncidentes} />}
         {area === "asistente" && <PanelAsistente prospectos={prospectosMarca} campanas={campanasMarca} grupos={grupos} marca={marca} />}
