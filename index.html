@@ -1726,6 +1726,7 @@ function PanelMails({ marca }) {
   const [remitente, setRemitente] = useState("");
   const [asunto, setAsunto] = useState("");
   const [cuerpo, setCuerpo] = useState("");
+  const [adjuntarFolleto, setAdjuntarFolleto] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
   const [resultado, setResultado] = useState("");
@@ -1771,6 +1772,25 @@ function PanelMails({ marca }) {
 
   const elegidos = todosContactos.filter(c => seleccionados[c.id]);
 
+  async function armarAdjunto() {
+    if (!adjuntarFolleto) return null;
+    const nombreArchivo = marca === "VIP Deco & Home" ? "resumen-vipdeco.pdf" : "resumen-vv.pdf";
+    try {
+      const resp = await fetch(`/${nombreArchivo}`);
+      if (!resp.ok) throw new Error("No encontré el PDF en el repo");
+      const blob = await resp.blob();
+      const base64 = await new Promise((res, rej) => {
+        const lector = new FileReader();
+        lector.onload = () => res(lector.result.split(",")[1]);
+        lector.onerror = () => rej(new Error("No pude leer el PDF"));
+        lector.readAsDataURL(blob);
+      });
+      return { nombre: nombreArchivo, contenidoBase64: base64 };
+    } catch (e) {
+      throw new Error(`No se pudo adjuntar el folleto: ${e.message}. ¿Subiste ${nombreArchivo} a la raíz del repo?`);
+    }
+  }
+
   async function enviar() {
     if (!remitente.trim() || !asunto.trim() || !cuerpo.trim() || elegidos.length === 0) {
       setError("Completá remitente, asunto, cuerpo, y elegí al menos un destinatario.");
@@ -1778,13 +1798,14 @@ function PanelMails({ marca }) {
     }
     setEnviando(true); setError(""); setResultado("");
     try {
+      const adjunto = await armarAdjunto();
       const cuerpoHtml = cuerpo.split("\n").map(l => `<p>${l || "&nbsp;"}</p>`).join("");
       const r = await fetch("/api/enviar-mail", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           remitente,
           destinatarios: elegidos.map(c => ({ email: c.email, nombre: c.nombre })),
-          asunto, cuerpoHtml
+          asunto, cuerpoHtml, adjunto
         })
       });
       const textoCrudo = await r.text();
@@ -1837,6 +1858,10 @@ function PanelMails({ marca }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Cuerpo</div>
             <textarea value={cuerpo} onChange={e => setCuerpo(e.target.value)} placeholder="Escribí el mensaje…"
               style={{ width: "100%", minHeight: 140, padding: 12, borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 12.5, color: SUB, cursor: "pointer" }}>
+              <input type="checkbox" checked={adjuntarFolleto} onChange={e => setAdjuntarFolleto(e.target.checked)} />
+              Adjuntar folleto en PDF de {marca}
+            </label>
           </Tarjeta>
 
           <Tarjeta style={{ marginBottom: 16 }}>
