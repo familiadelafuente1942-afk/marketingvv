@@ -1,0 +1,16 @@
+{
+  "functions": {
+    "api/asistente.js": {
+      "maxDuration": 60
+    },
+    "api/prospectar.js": {
+      "maxDuration": 60
+    },
+    "api/enviar-mail.js": {
+      "maxDuration": 60
+    },
+    "api/webhook-resend.js": {
+      "maxDuration": 15
+    }
+  }
+}
