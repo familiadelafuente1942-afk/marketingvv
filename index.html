@@ -1757,7 +1757,7 @@ function PanelMails({ marca }) {
         vvFetch("socios_prospectados?select=*&order=creado.desc&limit=300")
       ]);
       setProspectos((p || []).filter(x => (x.marca || "V+V Construcciones") === marca && x.email));
-      setSocios((s || []).filter(x => (x.marca || "V+V Construcciones") === marca && x.email));
+      setSocios((s || []).filter(x => (marca === "V+V Construcciones" || (x.marca || "V+V Construcciones") === marca) && x.email));
     } catch (e) { setError(e.message); }
     finally { setCargandoContactos(false); }
   }
