@@ -360,7 +360,19 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
             <tbody>
               {filasVisibles.map(x => (
                 <tr key={x.id}>
-                  {campos.map(c => <td key={c.key} style={td}>{x[c.key] || "—"}</td>)}
+                  {campos.map(c => {
+                    const valor = x[c.key];
+                    let contenido = valor || "—";
+                    if (valor && c.key === "sitio_web") {
+                      const url = /^https?:\/\//i.test(valor) ? valor : `https://${valor}`;
+                      contenido = <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: BRASS, textDecoration: "underline" }}>{valor}</a>;
+                    } else if (valor && c.key === "email") {
+                      contenido = <a href={`mailto:${valor}`} style={{ color: BRASS, textDecoration: "underline" }}>{valor}</a>;
+                    } else if (valor && c.key === "telefono") {
+                      contenido = <a href={`tel:${valor.replace(/\s+/g, "")}`} style={{ color: BRASS, textDecoration: "underline" }}>{valor}</a>;
+                    }
+                    return <td key={c.key} style={td}>{contenido}</td>;
+                  })}
                   {estadoCampo && (
                     <td style={td}>
                       <select value={x[estadoCampo]} onChange={e => cambiarEstado(x.id, e.target.value)}
