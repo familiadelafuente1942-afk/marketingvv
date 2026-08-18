@@ -1130,6 +1130,7 @@ function LandingDeco() {
 function SelectorApp({ activo, onCambiar }) {
   const opciones = [
     { id: "vv", label: "V+V Construcciones" },
+    { id: "deco", label: "VIP Deco & Home" },
     { id: "operaciones", label: "Centro de Operaciones" }
   ];
   return (
@@ -1799,7 +1800,7 @@ function PanelMails({ marca }) {
     setEnviando(true); setError(""); setResultado("");
     try {
       const adjunto = await armarAdjunto();
-      const urlSitio = marca === "VIP Deco & Home" ? "https://marketingvv.vercel.app/#deco" : "https://marketingvv.vercel.app";
+      const urlSitio = "https://www.vvconstruccionesweb.com";
       const botonHtml = (incluirBotonSitio && marca === "V+V Construcciones")
         ? `<div style="margin-top:28px;padding-top:20px;border-top:1px solid #E6E9EE;text-align:center;"><a href="${urlSitio}" style="display:inline-block;background:#B0894F;color:#fff;text-decoration:none;padding:13px 28px;border-radius:4px;font-weight:bold;font-family:sans-serif;">Ver más — V+V Construcciones</a></div>`
         : "";
@@ -1994,6 +1995,19 @@ function CentroOperaciones() {
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <img src={LOGO_VV} alt="V+V Construcciones" style={{ height: 30, display: "block" }} />
           <button onClick={() => { cerrarSesion(); setAutenticado(false); }} style={{ border: "none", background: "none", color: "#8B95A5", fontSize: 11.5, cursor: "pointer" }}>Cerrar sesión</button>
+        </div>
+      </div>
+      <div style={{ background: "#161F30", padding: "10px 20px", borderBottom: "1px solid #26314A" }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 10.5, color: "#8B95A5", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>Trabajando como:</span>
+          <div style={{ display: "flex", gap: 6 }}>
+            {["V+V Construcciones", "VIP Deco & Home"].map(m => (
+              <button key={m} onClick={() => setMarca(m)} style={{
+                border: "none", borderRadius: 20, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
+                background: marca === m ? BRASS : "transparent", color: marca === m ? "#fff" : "#B7BFCC"
+              }}>{m}</button>
+            ))}
+          </div>
         </div>
       </div>
       <div style={{ background: "#0D1420", padding: "10px 20px", overflowX: "auto" }}>
