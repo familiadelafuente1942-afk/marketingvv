@@ -20,35 +20,49 @@ module.exports = async function handler(req, res) {
     });
   }
 
-  const lote = destinatarios.map(d => ({
-    from: remitente,
-    to: [d.email],
-    subject: asunto,
-    html: cuerpoHtml,
-    ...(adjunto && adjunto.contenidoBase64 ? { attachments: [{ filename: adjunto.nombre || "adjunto.pdf", content: adjunto.contenidoBase64 }] } : {})
-  }));
-
   try {
-    const r = await fetch("https://api.resend.com/emails/batch", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(lote)
-    });
+    let resultados;
 
-    const data = await r.json();
-    if (!r.ok) {
-      return res.status(r.status).json({ error: data?.message || "Error de la API de Resend" });
+    if (adjunto && adjunto.contenidoBase64) {
+      // Resend NO soporta adjuntos en el envío por lote — mandamos uno por uno.
+      resultados = [];
+      for (const d of destinatarios) {
+        try {
+          const r = await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              from: remitente,
+              to: [d.email],
+              subject: asunto,
+              html: cuerpoHtml,
+              attachments: [{ filename: adjunto.nombre || "adjunto.pdf", content: adjunto.contenidoBase64 }]
+            })
+          });
+          const data = await r.json();
+          resultados.push({ email: d.email, nombre: d.nombre || "", resend_id: r.ok ? data.id : null });
+        } catch (e) {
+          resultados.push({ email: d.email, nombre: d.nombre || "", resend_id: null });
+        }
+      }
+    } else {
+      const lote = destinatarios.map(d => ({
+        from: remitente, to: [d.email], subject: asunto, html: cuerpoHtml
+      }));
+      const r = await fetch("https://api.resend.com/emails/batch", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+        body: JSON.stringify(lote)
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        return res.status(r.status).json({ error: data?.message || "Error de la API de Resend" });
+      }
+      resultados = destinatarios.map((d, i) => ({
+        email: d.email, nombre: d.nombre || "",
+        resend_id: (data.data && data.data[i] && data.data[i].id) || null
+      }));
     }
-
-    // data.data es un array de { id } en el mismo orden que se mandó
-    const resultados = destinatarios.map((d, i) => ({
-      email: d.email,
-      nombre: d.nombre || "",
-      resend_id: (data.data && data.data[i] && data.data[i].id) || null
-    }));
 
     return res.status(200).json({ resultados });
   } catch (e) {
