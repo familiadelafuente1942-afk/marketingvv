@@ -960,7 +960,6 @@ function Landing() {
 
       <footer>
         <div>© 2026 V+V Construcciones — Hudson, Buenos Aires, Argentina</div>
-        <a href="#deco" style={{ fontSize: 10.5 }}>VIP Deco & Home →</a>
         <a href="#operaciones" className="acceso-interno">Acceso interno →</a>
       </footer>
     </div>
@@ -1131,7 +1130,6 @@ function LandingDeco() {
 function SelectorApp({ activo, onCambiar }) {
   const opciones = [
     { id: "vv", label: "V+V Construcciones" },
-    { id: "deco", label: "VIP Deco & Home" },
     { id: "operaciones", label: "Centro de Operaciones" }
   ];
   return (
@@ -1643,7 +1641,7 @@ function PanelProspeccion({ onData, marca }) {
             <button key={z} onClick={() => alternar(zonas, setZonas, z)} disabled={corriendo} style={{
               border: `1.5px solid ${BRASS}`, borderRadius: 20, padding: "8px 14px", fontSize: 12, fontWeight: 700,
               background: "#FBF3E8", color: "#8A5F1E", cursor: corriendo ? "default" : "pointer"
-            }}>{z} ✕</button>
+            }}>✓ {z} (tocá para sacar) ✕</button>
           ))}
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
@@ -1666,7 +1664,7 @@ function PanelProspeccion({ onData, marca }) {
             <button key={c} onClick={() => alternar(categorias, setCategorias, c)} disabled={corriendo} style={{
               border: `1.5px solid ${BRASS}`, borderRadius: 20, padding: "8px 14px", fontSize: 12, fontWeight: 700,
               background: "#FBF3E8", color: "#8A5F1E", cursor: corriendo ? "default" : "pointer"
-            }}>✓ {c} ✕</button>
+            }}>✓ {c} (tocá para sacar) ✕</button>
           ))}
         </div>
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
@@ -1723,10 +1721,12 @@ function PanelMails({ marca }) {
   const [socios, setSocios] = useState([]);
   const [cargandoContactos, setCargandoContactos] = useState(true);
   const [seleccionados, setSeleccionados] = useState({});
-  const [remitente, setRemitente] = useState("");
-  const [asunto, setAsunto] = useState("");
-  const [cuerpo, setCuerpo] = useState("");
-  const [adjuntarFolleto, setAdjuntarFolleto] = useState(false);
+  const [remitente, setRemitente] = useState("ventas@vvconstruccionesweb.com");
+  const [responderA, setResponderA] = useState("vvconstrucciones@yahoo.com.ar");
+  const [asunto, setAsunto] = useState("V+V Construcciones — Constructora de Zona Sur");
+  const [cuerpo, setCuerpo] = useState("Hola,\n\nSomos V+V Construcciones, constructora de Zona Sur (Canning, Hudson, City Bell, La Plata, Quilmes) con más de 12 años de experiencia en barrios privados y naves industriales.\n\nTrabajamos llave en mano: diseño, planos, renders 3D y dirección de obra propia, de principio a fin.\n\nTe dejamos nuestro folleto y quedamos a disposición para coordinar una visita sin compromiso.\n\nSaludos,\nV+V Construcciones");
+  const [adjuntarFolleto, setAdjuntarFolleto] = useState(true);
+  const [incluirBotonSitio, setIncluirBotonSitio] = useState(true);
   const [enviando, setEnviando] = useState(false);
   const [error, setError] = useState("");
   const [resultado, setResultado] = useState("");
@@ -1799,11 +1799,15 @@ function PanelMails({ marca }) {
     setEnviando(true); setError(""); setResultado("");
     try {
       const adjunto = await armarAdjunto();
-      const cuerpoHtml = cuerpo.split("\n").map(l => `<p>${l || "&nbsp;"}</p>`).join("");
+      const urlSitio = marca === "VIP Deco & Home" ? "https://marketingvv.vercel.app/#deco" : "https://marketingvv.vercel.app";
+      const botonHtml = (incluirBotonSitio && marca === "V+V Construcciones")
+        ? `<div style="margin-top:28px;padding-top:20px;border-top:1px solid #E6E9EE;text-align:center;"><a href="${urlSitio}" style="display:inline-block;background:#B0894F;color:#fff;text-decoration:none;padding:13px 28px;border-radius:4px;font-weight:bold;font-family:sans-serif;">Ver más — V+V Construcciones</a></div>`
+        : "";
+      const cuerpoHtml = cuerpo.split("\n").map(l => `<p>${l || "&nbsp;"}</p>`).join("") + botonHtml;
       const r = await fetch("/api/enviar-mail", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          remitente,
+          remitente, responderA,
           destinatarios: elegidos.map(c => ({ email: c.email, nombre: c.nombre })),
           asunto, cuerpoHtml, adjunto
         })
@@ -1826,7 +1830,7 @@ function PanelMails({ marca }) {
         } catch (e) { /* seguimos con el resto */ }
       }
       setResultado(`✓ Enviado a ${data.resultados.filter(r => r.resend_id).length} de ${elegidos.length} destinatarios.`);
-      setSeleccionados({}); setAsunto(""); setCuerpo("");
+      setSeleccionados({});
       cargarHistorial();
     } catch (e) { setError(e.message); }
     finally { setEnviando(false); }
@@ -1852,13 +1856,22 @@ function PanelMails({ marca }) {
             <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Remitente</div>
             <input value={remitente} onChange={e => setRemitente(e.target.value)} placeholder="ej: ventas@vvconstruccionesweb.com (debe ser un dominio verificado en Resend)"
               style={{ ...campoEstilo, width: "100%", marginBottom: 14 }} />
+            <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Responder a (opcional)</div>
+            <input value={responderA} onChange={e => setResponderA(e.target.value)} placeholder="ej: vvconstrucciones@yahoo.com.ar — ahí te van a llegar las respuestas"
+              style={{ ...campoEstilo, width: "100%", marginBottom: 14 }} />
             <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Asunto</div>
             <input value={asunto} onChange={e => setAsunto(e.target.value)} placeholder="Asunto del mail"
               style={{ ...campoEstilo, width: "100%", marginBottom: 14 }} />
             <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Cuerpo</div>
             <textarea value={cuerpo} onChange={e => setCuerpo(e.target.value)} placeholder="Escribí el mensaje…"
               style={{ width: "100%", minHeight: 140, padding: 12, borderRadius: 8, border: `1px solid ${BORDER}`, fontSize: 13, fontFamily: "inherit", resize: "vertical" }} />
-            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 12.5, color: SUB, cursor: "pointer" }}>
+            {marca === "V+V Construcciones" && (
+              <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, fontSize: 12.5, color: SUB, cursor: "pointer" }}>
+                <input type="checkbox" checked={incluirBotonSitio} onChange={e => setIncluirBotonSitio(e.target.checked)} />
+                Incluir botón "Ver más" que lleva directo a la página de V+V Construcciones
+              </label>
+            )}
+            <label style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 8, fontSize: 12.5, color: SUB, cursor: "pointer" }}>
               <input type="checkbox" checked={adjuntarFolleto} onChange={e => setAdjuntarFolleto(e.target.checked)} />
               Adjuntar folleto en PDF de {marca}
             </label>
@@ -1981,19 +1994,6 @@ function CentroOperaciones() {
         <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <img src={LOGO_VV} alt="V+V Construcciones" style={{ height: 30, display: "block" }} />
           <button onClick={() => { cerrarSesion(); setAutenticado(false); }} style={{ border: "none", background: "none", color: "#8B95A5", fontSize: 11.5, cursor: "pointer" }}>Cerrar sesión</button>
-        </div>
-      </div>
-      <div style={{ background: "#161F30", padding: "10px 20px", borderBottom: "1px solid #26314A" }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", alignItems: "center", gap: 10 }}>
-          <span style={{ fontSize: 10.5, color: "#8B95A5", fontWeight: 700, letterSpacing: ".06em", textTransform: "uppercase" }}>Trabajando como:</span>
-          <div style={{ display: "flex", gap: 6 }}>
-            {["V+V Construcciones", "VIP Deco & Home"].map(m => (
-              <button key={m} onClick={() => setMarca(m)} style={{
-                border: "none", borderRadius: 20, padding: "7px 14px", fontSize: 12, fontWeight: 700, cursor: "pointer",
-                background: marca === m ? BRASS : "transparent", color: marca === m ? "#fff" : "#B7BFCC"
-              }}>{m}</button>
-            ))}
-          </div>
         </div>
       </div>
       <div style={{ background: "#0D1420", padding: "10px 20px", overflowX: "auto" }}>
