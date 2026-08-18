@@ -25,7 +25,7 @@ module.exports = async function handler(req, res) {
 
   const prompt = `Buscá hasta 15 empresas reales, existentes hoy, de la categoría "${categoria}" que operen en la zona "${zona}" (Argentina). Sé exhaustivo: revisá el sitio propio de cada empresa, cámaras y colegios profesionales del rubro, portales de negocios y directorios, redes sociales de empresas, y revistas o notas del sector. Cuantas más fuentes distintas revises, mejor.
 
-REGLA ABSOLUTA: solo empresas/organizaciones, nunca personas físicas. Si "${categoria}" pudiera interpretarse como buscar personas individuales en vez de empresas, ignorá esa interpretación y devolvé un array vacío.
+REGLA ABSOLUTA: solo empresas/organizaciones, nunca personas físicas. Si "${categoria}" pudiera interpretarse como buscar personas individuales en vez de empresas, ignorá esa interpretación y devolvé un array vacío. Si la categoría es "barrio privado (administración)", buscá específicamente el organismo/empresa de administración de cada barrio privado de la zona (nunca datos de propietarios ni residentes) — nombre del barrio, sitio web, teléfono y mail de la administración.
 
 Para cada empresa, conseguí: nombre de la empresa, sitio web (si tiene), teléfono de contacto comercial publicado, mail de contacto comercial publicado (si lo hay), y de qué fuente lo sacaste (sitio propio / cámara del rubro / colegio profesional / portal / revista / red social de la empresa).
 

@@ -1528,8 +1528,8 @@ function PanelDiseno() {
 }
 
 // ═══════════════════════ PROSPECCIÓN DE SOCIOS ═══════════════════════
-const ZONAS_PROSPECCION = ["CABA", "GBA Norte", "GBA Oeste", "GBA Sur", "La Plata / PBA Interior"];
-const CATEGORIAS_PROSPECCION_VV = ["estudio de arquitectura", "desarrollador inmobiliario", "gerenciadora de obra"];
+const ZONAS_PROSPECCION = ["CABA", "GBA Norte", "GBA Oeste", "GBA Sur", "La Plata / PBA Interior", "Tigre", "Pilar", "Escobar", "San Isidro", "Ezeiza", "Córdoba (Provincia)", "San Luis (Provincia)", "Mendoza (Provincia)", "Rosario / Santa Fe"];
+const CATEGORIAS_PROSPECCION_VV = ["estudio de arquitectura", "desarrollador inmobiliario", "gerenciadora de obra", "barrio privado (administración)"];
 const CATEGORIAS_PROSPECCION_DECO = ["estudio de arquitectura", "interiorista", "empresa de decoración"];
 
 function PanelProspeccion({ onData, marca }) {
@@ -1623,6 +1623,9 @@ function PanelProspeccion({ onData, marca }) {
   return (
     <div>
       <Encabezado area="Prospección" titulo={marca === "VIP Deco & Home" ? "Buscar interioristas y estudios socios" : "Buscar estudios y desarrolladores socios"} />
+      {marca === "V+V Construcciones" && (
+        <div style={{ fontSize: 11.5, color: MUTE, marginBottom: 14 }}>La lista de abajo incluye también lo encontrado desde VIP Deco & Home.</div>
+      )}
       <Tarjeta style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 13, color: SUB, marginBottom: 16 }}>
           Elegí dónde y a quién buscar. Se recorre cada combinación de zona/categoría revisando
@@ -1700,7 +1703,7 @@ function PanelProspeccion({ onData, marca }) {
       </Tarjeta>
 
       <ListaGenerica key={marca + "-" + refrescar} tabla="socios_prospectados" etiqueta="empresa" onData={onData}
-        filtro={{ campo: "marca", valor: marca }}
+        filtro={marca === "VIP Deco & Home" ? { campo: "marca", valor: marca } : null}
         estadoCampo="estado" estadoOpciones={["nuevo", "contactado", "respondió", "acuerdo"]}
         colorEstado={{ nuevo: "#4A5565", contactado: "#9A6B1E", "respondió": "#3B6CA8", acuerdo: "#2F7A4F" }}
         campos={[
