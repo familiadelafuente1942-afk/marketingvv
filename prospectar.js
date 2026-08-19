@@ -25,12 +25,12 @@ module.exports = async function handler(req, res) {
 
   const prompt = `Buscá hasta 15 empresas reales, existentes hoy, de la categoría "${categoria}" que operen en la zona "${zona}" (Argentina). Sé exhaustivo: revisá el sitio propio de cada empresa, cámaras y colegios profesionales del rubro, portales de negocios y directorios, redes sociales de empresas, y revistas o notas del sector. Cuantas más fuentes distintas revises, mejor.
 
-REGLA ABSOLUTA: solo empresas/organizaciones, nunca personas físicas. Si "${categoria}" pudiera interpretarse como buscar personas individuales en vez de empresas, ignorá esa interpretación y devolvé un array vacío. Si la categoría es "barrio privado (administración)", buscá específicamente el organismo/empresa de administración de cada barrio privado de la zona (nunca datos de propietarios ni residentes) — nombre del barrio, sitio web, teléfono y mail de la administración.
+REGLA ABSOLUTA: solo empresas/organizaciones, nunca personas físicas. Si "${categoria}" pudiera interpretarse como buscar personas individuales en vez de empresas, ignorá esa interpretación y devolvé un array vacío. Si la categoría es "barrio privado (administración)", buscá específicamente el organismo/empresa de administración de cada barrio privado de la zona (nunca datos de propietarios ni residentes) — nombre del barrio, sitio web, teléfono y mail de la administración. Para redes sociales, solo cuentas OFICIALES de la empresa (verificables desde su sitio web o su bio), nunca perfiles personales de empleados o dueños.
 
-Para cada empresa, conseguí: nombre de la empresa, sitio web (si tiene), teléfono de contacto comercial publicado, mail de contacto comercial publicado (si lo hay), y de qué fuente lo sacaste (sitio propio / cámara del rubro / colegio profesional / portal / revista / red social de la empresa).
+Para cada empresa, conseguí: nombre de la empresa, sitio web (si tiene), teléfono de contacto comercial publicado, mail de contacto comercial publicado (si lo hay), su cuenta oficial de Instagram (usuario, ej: @estudioejemplo), Facebook (nombre de página o URL), TikTok (usuario) y X/Twitter (usuario) si las tiene, y de qué fuente lo sacaste.
 
 Respondé ÚNICAMENTE con un array JSON, sin texto antes ni después, sin backticks de markdown, con este formato exacto:
-[{"nombre":"...","sitio_web":"...","telefono":"...","email":"...","fuente":"..."}]
+[{"nombre":"...","sitio_web":"...","telefono":"...","email":"...","instagram":"...","facebook":"...","tiktok":"...","x":"...","fuente":"..."}]
 
 Si no encontrás algún dato para una empresa, dejá ese campo como cadena vacía "". Si no encontrás ninguna empresa real, respondé con un array vacío [].`;
 

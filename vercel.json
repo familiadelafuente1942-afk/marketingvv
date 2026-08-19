@@ -20,12 +20,28 @@
     },
     "api/cron-prospeccion.js": {
       "maxDuration": 300
+    },
+    "api/generar-contenido.js": {
+      "maxDuration": 30
+    },
+    "api/agente-diario.js": {
+      "maxDuration": 90
+    },
+    "api/webhook-whatsapp.js": {
+      "maxDuration": 30
+    },
+    "api/enviar-whatsapp-manual.js": {
+      "maxDuration": 15
     }
   },
   "crons": [
     {
       "path": "/api/cron-prospeccion",
       "schedule": "0 12 * * 1"
+    },
+    {
+      "path": "/api/agente-diario",
+      "schedule": "0 11 * * *"
     }
   ]
 }

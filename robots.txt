@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /#operaciones
+
+Sitemap: https://marketingvv.vercel.app/sitemap.xml

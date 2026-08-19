@@ -44,8 +44,30 @@ module.exports = async function handler(req, res) {
     if (tipo === "email.opened") patch.fecha_apertura = new Date().toISOString();
     if (tipo === "email.clicked") patch.fecha_click = new Date().toISOString();
 
-    // No pisar un estado "mejor" con uno anterior (ej: no bajar de "click" a "entregado")
-    const orden = ["enviado", "entregado", "abierto", "click", "rebotado"];
+    // No pisar un estado "mejor" con uno anterior (ej: no bajar de "click" a "entregado").
+    // Los rebotes/quejas son siempre críticos y se aplican igual, pasen lo que pasen antes.
+    const orden = ["enviado", "entregado", "abierto", "click"];
+    if (orden.includes(nuevoEstado)) {
+      try {
+        const rActual = await fetch(`${SUPA_URL}/rest/v1/emails_enviados?resend_id=eq.${encodeURIComponent(resendId)}&select=estado&limit=1`, {
+          headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }
+        });
+        const filas = rActual.ok ? await rActual.json() : [];
+        const estadoActual = filas[0] && filas[0].estado;
+        const posActual = orden.indexOf(estadoActual);
+        const posNueva = orden.indexOf(nuevoEstado);
+        if (posActual > -1 && posNueva > -1 && posActual > posNueva) {
+          // ya estaba en un estado más avanzado — no lo pisamos, pero seguimos
+          // guardando la fecha (apertura/click) si vino con este evento
+          delete patch.estado;
+        }
+      } catch (e) { /* si falla la consulta, aplicamos el patch igual, mejor que perder el dato */ }
+    }
+
+    if (Object.keys(patch).length === 0) {
+      return res.status(200).json({ ok: true, sinCambios: true });
+    }
+
     const r = await fetch(`${SUPA_URL}/rest/v1/emails_enviados?resend_id=eq.${encodeURIComponent(resendId)}`, {
       method: "PATCH",
       headers: {

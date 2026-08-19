@@ -61,7 +61,7 @@ module.exports = async function handler(req, res) {
 
     // 2) Marcar el último mail enviado a ese remitente como "respondido"
     if (remitente) {
-      await fetch(`${SUPA_URL}/rest/v1/emails_enviados?destinatario=eq.${encodeURIComponent(remitente)}&order=creado.desc&limit=1`, {
+      await fetch(`${SUPA_URL}/rest/v1/emails_enviados?destinatario=eq.${encodeURIComponent(remitente)}&order=creado.desc,id.desc&limit=1`, {
         method: "PATCH",
         headers: {
           apikey: serviceKey, Authorization: `Bearer ${serviceKey}`,
@@ -90,7 +90,7 @@ module.exports = async function handler(req, res) {
     }
 
     if (reenviadoOk) {
-      await fetch(`${SUPA_URL}/rest/v1/respuestas_recibidas?remitente=eq.${encodeURIComponent(remitente)}&order=creado.desc&limit=1`, {
+      await fetch(`${SUPA_URL}/rest/v1/respuestas_recibidas?remitente=eq.${encodeURIComponent(remitente)}&order=creado.desc,id.desc&limit=1`, {
         method: "PATCH",
         headers: {
           apikey: serviceKey, Authorization: `Bearer ${serviceKey}`,
