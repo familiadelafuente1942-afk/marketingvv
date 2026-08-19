@@ -1564,6 +1564,15 @@ function PanelProspeccion({ onData, marca }) {
   const [completandoTodos, setCompletandoTodos] = useState(false);
   const [logCompletar, setLogCompletar] = useState([]);
   const [sociosCargados, setSociosCargados] = useState([]);
+  const [estadoAuto, setEstadoAuto] = useState(null);
+
+  async function cargarEstadoAuto() {
+    try {
+      const r = await vvFetch("prospeccion_automatica_estado?id=eq.1&select=*");
+      if (r && r[0]) setEstadoAuto(r[0]);
+    } catch (e) { /* silencioso */ }
+  }
+  useEffect(() => { if (marca === "V+V Construcciones") cargarEstadoAuto(); }, [marca, refrescar]);
 
   async function buscarMailDe(fila) {
     setBuscandoMailId(fila.id);
@@ -1703,6 +1712,11 @@ function PanelProspeccion({ onData, marca }) {
       <Encabezado area="Prospección" titulo={marca === "VIP Deco & Home" ? "Buscar interioristas y estudios socios" : "Buscar estudios y desarrolladores socios"} />
       {marca === "V+V Construcciones" && (
         <div style={{ fontSize: 11.5, color: MUTE, marginBottom: 14 }}>La lista de abajo incluye también lo encontrado desde VIP Deco & Home.</div>
+      )}
+      {marca === "V+V Construcciones" && estadoAuto && estadoAuto.ultima_corrida && (
+        <div style={{ background: "#EAF3EC", color: "#2F7A4F", borderRadius: 9, padding: "10px 14px", fontSize: 11.5, marginBottom: 16 }}>
+          🤖 Prospección automática — última corrida {new Date(estadoAuto.ultima_corrida).toLocaleDateString("es-AR")}: {estadoAuto.ultimo_resultado}
+        </div>
       )}
       <Tarjeta style={{ marginBottom: 18 }}>
         <div style={{ fontSize: 13, color: SUB, marginBottom: 16 }}>

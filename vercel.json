@@ -17,6 +17,15 @@
     },
     "api/webhook-recepcion.js": {
       "maxDuration": 30
+    },
+    "api/cron-prospeccion.js": {
+      "maxDuration": 300
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron-prospeccion",
+      "schedule": "0 12 * * 1"
+    }
+  ]
 }

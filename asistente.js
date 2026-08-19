@@ -19,6 +19,44 @@ ${otra}
 Tu rol: sos el motor de marketing y ventas más efectivo posible para conseguir clientes a "${marca}" — redactás mensajes, publicaciones, mails, priorizás prospectos, sugerís estrategias de contacto y campañas, siempre con un tono cordial en español rioplatense. Tenés herramienta de búsqueda web activa: usala sin dudar cada vez que la respuesta se beneficie de información actual o real de internet (precios, datos de empresas públicas, contactos publicados, tendencias, noticias del rubro, etc.) — nunca digas que no podés buscar en internet, porque sí podés. Trabajás exclusivamente con información pública y canales legales (nunca sugerís ni facilitás scraping de datos personales, acceso no autorizado a grupos privados, ni recolección de datos de individuos sin consentimiento — si te piden eso, explicá brevemente por qué no y ofrecé la alternativa legal). Sé directo y concreto: andá al grano con lo que te piden, sin preámbulos innecesarios.`;
 }
 
+async function extraerDatos(apiKey, textoRespuesta) {
+  try {
+    const r = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "claude-haiku-4-5-20251001",
+        max_tokens: 1800,
+        system: `Tu única tarea: leer el texto que te pasan y separar dos cosas distintas que puedan estar mencionadas.
+
+1) EMPRESAS/ORGANIZACIONES reales con al menos un dato de contacto (sitio web, teléfono o mail): estudios, desarrolladoras, comercios, etc.
+2) GRUPOS/COMUNIDADES para publicar o pedir acceso (grupos de WhatsApp, Facebook, chats de barrio, de propietarios, de vecinos, foros, etc.) — acá NO va contacto de personas individuales, solo el grupo en sí.
+
+Respondé ÚNICAMENTE con un JSON de este formato exacto, sin texto antes ni después, sin backticks:
+{"empresas":[{"nombre":"...","categoria":"...","zona":"...","sitio_web":"...","telefono":"...","email":"...","fuente":"..."}],"grupos":[{"barrio":"...","tipo":"...","contacto":"..."}]}
+
+Para "tipo" de grupo usá una de estas palabras: comercial/ventas, fútbol, social/vecinos, padres/colegio, otro. Si un dato no está, dejalo como "". Si no hay ninguna empresa, "empresas" queda como array vacío []. Si no hay ningún grupo, "grupos" queda como array vacío [].`,
+        messages: [{ role: "user", content: textoRespuesta }]
+      })
+    });
+    if (!r.ok) return { empresas: [], grupos: [] };
+    const data = await r.json();
+    const texto = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("").trim();
+    const limpio = texto.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    const parseado = JSON.parse(limpio);
+    return {
+      empresas: Array.isArray(parseado.empresas) ? parseado.empresas.filter(e => e && e.nombre) : [],
+      grupos: Array.isArray(parseado.grupos) ? parseado.grupos.filter(g => g && g.barrio) : []
+    };
+  } catch (e) {
+    return { empresas: [], grupos: [] };
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Método no permitido" });
@@ -79,7 +117,9 @@ module.exports = async function handler(req, res) {
       .map(b => b.text)
       .join("\n");
 
-    return res.status(200).json({ texto });
+    const { empresas, grupos } = await extraerDatos(apiKey, texto);
+
+    return res.status(200).json({ texto, empresas, grupos });
   } catch (e) {
     return res.status(500).json({ error: e.message || "Error inesperado" });
   }
