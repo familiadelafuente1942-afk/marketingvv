@@ -267,7 +267,7 @@ function StatMini({ n, l, color }) {
 }
 
 // ── componente genérico de lista con alta / cambio de estado / borrado ──
-function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado, ordenarPor, onData, etiqueta, filtro }) {
+function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado, ordenarPor, onData, etiqueta, filtro, accionesExtra }) {
   const [filas, setFilas] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
@@ -381,7 +381,10 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
                       </select>
                     </td>
                   )}
-                  <td style={td}><button onClick={() => borrar(x.id)} style={{ border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 }}>Borrar</button></td>
+                  <td style={td}>
+                    {accionesExtra && accionesExtra(x)}
+                    <button onClick={() => borrar(x.id)} style={{ border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 }}>Borrar</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -1557,6 +1560,53 @@ function PanelProspeccion({ onData, marca }) {
   const [error, setError] = useState("");
   const detenerRef = React.useRef(false);
   const [refrescar, setRefrescar] = useState(0);
+  const [buscandoMailId, setBuscandoMailId] = useState(null);
+  const [completandoTodos, setCompletandoTodos] = useState(false);
+  const [logCompletar, setLogCompletar] = useState([]);
+  const [sociosCargados, setSociosCargados] = useState([]);
+
+  async function buscarMailDe(fila) {
+    setBuscandoMailId(fila.id);
+    try {
+      const r = await fetch("/api/completar-mail", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre: fila.nombre, sitio_web: fila.sitio_web })
+      });
+      const textoCrudo = await r.text();
+      let data;
+      try { data = JSON.parse(textoCrudo); }
+      catch (e) { throw new Error(`Respuesta no-JSON (status ${r.status})`); }
+      if (!r.ok) throw new Error(data.error || "Error al buscar el mail");
+      if (data.email) {
+        await vvFetch(`socios_prospectados?id=eq.${fila.id}`, {
+          method: "PATCH", headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ email: data.email })
+        });
+        setRefrescar(r => r + 1);
+      }
+      return data.email || "";
+    } catch (e) {
+      setError(e.message);
+      return "";
+    } finally {
+      setBuscandoMailId(null);
+    }
+  }
+
+  async function completarMailesFaltantes(filas) {
+    const pendientes = filas.filter(f => f.sitio_web && !f.email);
+    if (pendientes.length === 0) { setError("No hay empresas con sitio web y sin mail para completar."); return; }
+    setCompletandoTodos(true); setLogCompletar([]); setError("");
+    let encontrados = 0;
+    for (const f of pendientes) {
+      setLogCompletar(l => [`Buscando mail de ${f.nombre}…`, ...l].slice(0, 20));
+      const email = await buscarMailDe(f);
+      if (email) { encontrados++; setLogCompletar(l => [`  → encontrado: ${email}`, ...l].slice(0, 20)); }
+      else { setLogCompletar(l => [`  → no encontrado`, ...l].slice(0, 20)); }
+    }
+    setLogCompletar(l => [`Listo — ${encontrados} de ${pendientes.length} mails completados.`, ...l].slice(0, 20));
+    setCompletandoTodos(false);
+  }
 
   useEffect(() => { setCategorias([CATEGORIAS_PROSPECCION[0]]); }, [marca]);
 
@@ -1581,6 +1631,17 @@ function PanelProspeccion({ onData, marca }) {
   const combos = zonas.length * categorias.length;
   const minutosEstimados = Math.max(1, Math.ceil(combos * 0.75));
   const costoEstimado = (combos * 0.15).toFixed(2);
+
+  async function mailRapido(nombre, sitio_web) {
+    try {
+      const r = await fetch("/api/completar-mail", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nombre, sitio_web })
+      });
+      const data = await r.json();
+      return (r.ok && data.email) ? data.email : "";
+    } catch (e) { return ""; }
+  }
 
   async function empezar() {
     if (combos === 0) { setError("Elegí al menos una zona y una categoría."); return; }
@@ -1607,10 +1668,15 @@ function PanelProspeccion({ onData, marca }) {
           const empresas = data.empresas || [];
           for (const e of empresas) {
             if (!e.nombre) continue;
+            let mailFinal = e.email || "";
+            if (!mailFinal && e.sitio_web && !detenerRef.current) {
+              setLog(l => [`  ✉ buscando mail de ${e.nombre}…`, ...l].slice(0, 30));
+              mailFinal = await mailRapido(e.nombre, e.sitio_web);
+            }
             try {
               await vvFetch("socios_prospectados", {
                 method: "POST", headers: { Prefer: "return=minimal" },
-                body: JSON.stringify({ nombre: e.nombre, marca, categoria, zona, sitio_web: e.sitio_web || "", telefono: e.telefono || "", email: e.email || "", fuente: e.fuente || "" })
+                body: JSON.stringify({ nombre: e.nombre, marca, categoria, zona, sitio_web: e.sitio_web || "", telefono: e.telefono || "", email: mailFinal, fuente: e.fuente || "" })
               });
               total++;
               setEncontrados(total);
@@ -1714,10 +1780,31 @@ function PanelProspeccion({ onData, marca }) {
         )}
       </Tarjeta>
 
-      <ListaGenerica key={marca + "-" + refrescar} tabla="socios_prospectados" etiqueta="empresa" onData={onData}
+      {logCompletar.length > 0 && (
+        <Tarjeta style={{ marginBottom: 16 }}>
+          <div style={{ maxHeight: 140, overflowY: "auto", fontSize: 11.5, color: MUTE, fontFamily: "monospace", lineHeight: 1.7 }}>
+            {logCompletar.map((l, i) => <div key={i}>{l}</div>)}
+          </div>
+        </Tarjeta>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <button onClick={() => completarMailesFaltantes(sociosCargados)} disabled={completandoTodos} style={{ ...btnNuevo, opacity: completandoTodos ? 0.6 : 1 }}>
+          {completandoTodos ? "Completando mails…" : `✉ Completar mails faltantes (${sociosCargados.filter(f => f.sitio_web && !f.email).length})`}
+        </button>
+      </div>
+
+      <ListaGenerica key={marca + "-" + refrescar} tabla="socios_prospectados" etiqueta="empresa"
+        onData={(datos) => { setSociosCargados(datos); if (onData) onData(datos); }}
         filtro={marca === "VIP Deco & Home" ? { campo: "marca", valor: marca } : null}
         estadoCampo="estado" estadoOpciones={["nuevo", "contactado", "respondió", "acuerdo"]}
         colorEstado={{ nuevo: "#4A5565", contactado: "#9A6B1E", "respondió": "#3B6CA8", acuerdo: "#2F7A4F" }}
+        accionesExtra={(fila) => fila.sitio_web && !fila.email ? (
+          <button onClick={() => buscarMailDe(fila)} disabled={buscandoMailId === fila.id}
+            style={{ border: "none", background: "none", color: BRASS, cursor: "pointer", fontSize: 11.5, marginRight: 10 }}>
+            {buscandoMailId === fila.id ? "Buscando…" : "Buscar mail"}
+          </button>
+        ) : null}
         campos={[
           { key: "nombre", label: "Empresa", ancho: "1 1 200px" },
           { key: "categoria", label: "Categoría", tipo: "select", opciones: CATEGORIAS_PROSPECCION },
@@ -1738,7 +1825,7 @@ function PanelMails({ marca }) {
   const [cargandoContactos, setCargandoContactos] = useState(true);
   const [seleccionados, setSeleccionados] = useState({});
   const [remitente, setRemitente] = useState("ventas@vvconstruccionesweb.com");
-  const [responderA, setResponderA] = useState("vvconstrucciones@yahoo.com.ar");
+  const [responderA, setResponderA] = useState("hola@respuestas.vvconstruccionesweb.com");
   const [asunto, setAsunto] = useState("V+V Construcciones — Constructora de Zona Sur");
   const [cuerpo, setCuerpo] = useState("Hola,\n\nSomos V+V Construcciones, constructora de Zona Sur (Canning, Hudson, City Bell, La Plata, Quilmes) con más de 12 años de experiencia en barrios privados y naves industriales.\n\nTrabajamos llave en mano: diseño, planos, renders 3D y dirección de obra propia, de principio a fin.\n\nTe dejamos nuestro folleto y quedamos a disposición para coordinar una visita sin compromiso.\n\nSaludos,\nV+V Construcciones");
   const [adjuntarFolleto, setAdjuntarFolleto] = useState(true);
@@ -1748,6 +1835,7 @@ function PanelMails({ marca }) {
   const [resultado, setResultado] = useState("");
   const [historial, setHistorial] = useState([]);
   const [cargandoHistorial, setCargandoHistorial] = useState(true);
+  const [respuestas, setRespuestas] = useState([]);
 
   async function cargarContactos() {
     setCargandoContactos(true);
@@ -1769,7 +1857,13 @@ function PanelMails({ marca }) {
     } catch (e) { /* silencioso */ }
     finally { setCargandoHistorial(false); }
   }
-  useEffect(() => { cargarContactos(); cargarHistorial(); setSeleccionados({}); }, [marca]);
+  async function cargarRespuestas() {
+    try {
+      const r = await vvFetch(`respuestas_recibidas?select=*&order=creado.desc&limit=100`);
+      setRespuestas(r || []);
+    } catch (e) { /* silencioso */ }
+  }
+  useEffect(() => { cargarContactos(); cargarHistorial(); cargarRespuestas(); setSeleccionados({}); }, [marca]);
 
   const todosContactos = [
     ...prospectos.map(p => ({ id: "p-" + p.id, email: p.email, nombre: p.nombre_contacto || p.empresa || p.email, origen: "Comercial" })),
@@ -1873,7 +1967,7 @@ function PanelMails({ marca }) {
             <input value={remitente} onChange={e => setRemitente(e.target.value)} placeholder="ej: ventas@vvconstruccionesweb.com (debe ser un dominio verificado en Resend)"
               style={{ ...campoEstilo, width: "100%", marginBottom: 14 }} />
             <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Responder a (opcional)</div>
-            <input value={responderA} onChange={e => setResponderA(e.target.value)} placeholder="ej: vvconstrucciones@yahoo.com.ar — ahí te van a llegar las respuestas"
+            <input value={responderA} onChange={e => setResponderA(e.target.value)} placeholder="hola@respuestas.vvconstruccionesweb.com — con esta, las respuestas quedan registradas solas en la app y te llegan igual a tu Yahoo"
               style={{ ...campoEstilo, width: "100%", marginBottom: 14 }} />
             <div style={{ fontSize: 12, fontWeight: 700, color: NAVY, marginBottom: 8 }}>Asunto</div>
             <input value={asunto} onChange={e => setAsunto(e.target.value)} placeholder="Asunto del mail"
@@ -1949,6 +2043,22 @@ function PanelMails({ marca }) {
                   </tbody>
                 </table>
               </div>}
+          </Tarjeta>
+
+          <div style={{ marginTop: 24, marginBottom: 12, fontSize: 13, fontWeight: 700, color: NAVY }}>Respuestas recibidas ({respuestas.length})</div>
+          <Tarjeta>
+            {respuestas.length === 0 ? <div style={{ fontSize: 12.5, color: MUTE }}>Todavía no llegó ninguna respuesta detectada automáticamente.</div> :
+              respuestas.map(r => (
+                <div key={r.id} style={{ padding: "12px 0", borderBottom: `1px solid ${BORDER}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
+                    <div style={{ fontSize: 12.5, fontWeight: 700, color: NAVY }}>{r.remitente}</div>
+                    <div style={{ fontSize: 10.5, color: MUTE }}>{r.creado ? new Date(r.creado).toLocaleDateString("es-AR") : ""}</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: SUB, marginBottom: 4 }}>{r.asunto}</div>
+                  <div style={{ fontSize: 11.5, color: "#1A1A1A", whiteSpace: "pre-wrap" }}>{(r.cuerpo || "").slice(0, 300)}</div>
+                  {!r.reenviado_ok && <div style={{ fontSize: 10.5, color: "#B3261E", marginTop: 4 }}>⚠ no se pudo reenviar a tu Yahoo, revisala acá</div>}
+                </div>
+              ))}
           </Tarjeta>
         </div>
       )}

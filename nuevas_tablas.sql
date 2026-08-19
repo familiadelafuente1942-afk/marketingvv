@@ -39,12 +39,6 @@ create table if not exists socios_prospectados (
 );
 alter table socios_prospectados add column if not exists marca text default 'V+V Construcciones';
 
-alter table grupos_barrios add column if not exists marca text default 'V+V Construcciones';
-alter table contenido add column if not exists marca text default 'V+V Construcciones';
-alter table competencia add column if not exists marca text default 'V+V Construcciones';
-alter table finanzas_ingresos add column if not exists marca text default 'V+V Construcciones';
-alter table finanzas_gastos add column if not exists marca text default 'V+V Construcciones';
-
 -- MARKETING ────────────────────────────────────────────────────
 create table if not exists campanas (
   id uuid primary key default gen_random_uuid(),
@@ -178,9 +172,40 @@ create table if not exists seguridad_respaldos (
 
 -- ═══════════════════════════════════════════════════════════════
 -- ═══════════════════════════════════════════════════════════════
--- Sumar marca a prospectos (ya existía de antes)
+-- Sumar la columna "marca" a todas las tablas que la necesitan
+-- (acá abajo porque recién ahora todas las tablas ya existen)
 -- ═══════════════════════════════════════════════════════════════
+alter table grupos_barrios add column if not exists marca text default 'V+V Construcciones';
+alter table contenido add column if not exists marca text default 'V+V Construcciones';
+alter table competencia add column if not exists marca text default 'V+V Construcciones';
+alter table finanzas_ingresos add column if not exists marca text default 'V+V Construcciones';
+alter table finanzas_gastos add column if not exists marca text default 'V+V Construcciones';
 alter table prospectos add column if not exists marca text default 'V+V Construcciones';
+
+-- HISTORIAL DEL CHAT DEL ASISTENTE (persiste entre sesiones) ──
+create table if not exists chat_mensajes (
+  id uuid primary key default gen_random_uuid(),
+  marca text default 'V+V Construcciones',
+  role text not null,
+  contenido text not null,
+  creado timestamptz default now()
+);
+
+-- MAILS ENVIADOS (con seguimiento de apertura/click) ──────────
+create table if not exists emails_enviados (
+  id uuid primary key default gen_random_uuid(),
+  marca text default 'V+V Construcciones',
+  destinatario text not null,
+  destinatario_nombre text,
+  asunto text,
+  cuerpo text,
+  resend_id text,
+  estado text default 'enviado',
+  fecha_envio timestamptz default now(),
+  fecha_apertura timestamptz,
+  fecha_click timestamptz,
+  creado timestamptz default now()
+);
 
 -- LANDING PÚBLICA: permitir que cualquiera (sin login) cree un
 -- prospecto desde el formulario de contacto — pero NUNCA leer,
@@ -192,13 +217,24 @@ create policy "publico_inserta_prospecto" on prospectos
   with check (true);
 
 -- ═══════════════════════════════════════════════════════════════
+-- RESPUESTAS RECIBIDAS (detectadas automáticamente) ────────────
+create table if not exists respuestas_recibidas (
+  id uuid primary key default gen_random_uuid(),
+  marca text default 'V+V Construcciones',
+  remitente text,
+  asunto text,
+  cuerpo text,
+  reenviado_ok boolean default false,
+  creado timestamptz default now()
+);
+
 -- RLS: solo vvconstrucciones@yahoo.com.ar puede leer/escribir
 -- ═══════════════════════════════════════════════════════════════
 do $$
 declare
   t text;
   tablas text[] := array[
-    'campanas','contenido','competencia','grupos_barrios','clientes_obra','socios_prospectados',
+    'campanas','contenido','competencia','grupos_barrios','clientes_obra','socios_prospectados','chat_mensajes','emails_enviados','respuestas_recibidas',
     'tickets_operaciones','tickets_soporte','faq',
     'finanzas_ingresos','finanzas_gastos','producto_pedidos',
     'seguridad_incidentes','seguridad_respaldos'
