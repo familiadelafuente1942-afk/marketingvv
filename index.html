@@ -1295,11 +1295,6 @@ function PanelCEO({ metricas, marca }) {
         <StatMini n={m.prospectos ?? "…"} l="Prospectos totales" />
         <StatMini n={m.campanasActivas ?? "…"} l="Campañas activas" color={BRASS} />
         <StatMini n={m.leadsGenerados ?? "…"} l="Leads por campañas" />
-        <StatMini n={m.clientesObra ?? "…"} l="Obras en curso" />
-        <StatMini n={m.ticketsAbiertos ?? "…"} l="Tickets abiertos" color={(m.ticketsAbiertos || 0) > 0 ? "#B3261E" : "#2F7A4F"} />
-        <StatMini n={fmt(m.balance)} l="Balance financiero" color={(m.balance || 0) >= 0 ? "#2F7A4F" : "#B3261E"} />
-        <StatMini n={m.pedidosProducto ?? "…"} l="Pedidos de producto" />
-        <StatMini n={m.incidentesSeguridad ?? "…"} l="Incidentes de seguridad" color={(m.incidentesSeguridad || 0) > 0 ? "#B3261E" : "#2F7A4F"} />
       </div>
 
       <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
@@ -3204,13 +3199,8 @@ const AREAS = [
   { id: "comercial", label: "Comercial" },
   { id: "marketing", label: "Marketing" },
   { id: "prospeccion", label: "Prospección" },
-  { id: "operaciones", label: "Operaciones" },
-  { id: "soporte", label: "Soporte" },
-  { id: "finanzas", label: "Finanzas" },
   { id: "mails", label: "Mails" },
   { id: "whatsapp-ia", label: "🤖 WhatsApp IA" },
-  { id: "producto", label: "Producto" },
-  { id: "seguridad", label: "Seguridad" },
   { id: "asistente", label: "Asistente IA" },
   { id: "diseno", label: "Diseño" }
 ];
@@ -3330,13 +3320,8 @@ function CentroOperaciones() {
           {area === "comercial" && <PanelComercial onData={setProspectos} marca={marca} rol={rol} />}
           {area === "marketing" && <PanelMarketing onCampanas={setCampanas} onGrupos={setGrupos} marca={marca} />}
           {area === "prospeccion" && <PanelProspeccion onData={() => {}} marca={marca} />}
-          {area === "operaciones" && <PanelOperaciones onData={setClientesObra} />}
-          {area === "soporte" && <PanelSoporte onData={setTicketsSop} />}
-          {area === "finanzas" && <PanelFinanzas onData={setFinanzas} marca={marca} />}
           {area === "mails" && <PanelMails marca={marca} />}
           {area === "whatsapp-ia" && <PanelWhatsAppIA marca={marca} />}
-          {area === "producto" && <PanelProducto onData={setPedidosProducto} />}
-          {area === "seguridad" && <PanelSeguridad onData={setIncidentes} />}
           {area === "asistente" && <PanelAsistente prospectos={prospectosMarca} campanas={campanasMarca} grupos={grupos} marca={marca} />}
           {area === "diseno" && <PanelDiseno />}
         </LimiteDeError>

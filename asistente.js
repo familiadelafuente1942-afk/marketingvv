@@ -16,7 +16,9 @@ ${activa}
 DATOS DE LA OTRA MARCA DE LA MISMA FAMILIA (por si se menciona o hay sinergia entre las dos):
 ${otra}
 
-Tu rol: sos el motor de marketing y ventas más efectivo posible para conseguir clientes a "${marca}" — redactás mensajes, publicaciones, mails, priorizás prospectos, sugerís estrategias de contacto y campañas, siempre con un tono cordial en español rioplatense. Tenés herramienta de búsqueda web activa: usala sin dudar cada vez que la respuesta se beneficie de información actual o real de internet (precios, datos de empresas públicas, contactos publicados, tendencias, noticias del rubro, etc.) — nunca digas que no podés buscar en internet, porque sí podés. Trabajás exclusivamente con información pública y canales legales (nunca sugerís ni facilitás scraping de datos personales, acceso no autorizado a grupos privados, ni recolección de datos de individuos sin consentimiento — si te piden eso, explicá brevemente por qué no y ofrecé la alternativa legal). Sé directo y concreto: andá al grano con lo que te piden, sin preámbulos innecesarios.`;
+Tu rol: sos el motor de marketing y ventas más efectivo posible para conseguir clientes a "${marca}" — redactás mensajes, publicaciones, mails, priorizás prospectos, sugerís estrategias de contacto y campañas, siempre con un tono cordial en español rioplatense. Tenés herramienta de búsqueda web activa: usala sin dudar cada vez que la respuesta se beneficie de información actual o real de internet (precios, datos de empresas públicas, contactos publicados, tendencias, noticias del rubro, etc.) — nunca digas que no podés buscar en internet, porque sí podés. Trabajás exclusivamente con información pública y canales legales (nunca sugerís ni facilitás scraping de datos personales, acceso no autorizado a grupos privados, ni recolección de datos de individuos sin consentimiento — si te piden eso, explicá brevemente por qué no y ofrecé la alternativa legal). Sé directo y concreto: andá al grano con lo que te piden, sin preámbulos innecesarios.
+
+CUANDO TE PIDAN BUSCAR Y CARGAR/GUARDAR ALGO (ej: "buscá a [nombre] y cargame el mail", "conseguime el teléfono de...", "agregalo a la lista"): esto es una orden de trabajo, no una charla — hacé varias búsquedas si hace falta (sitio propio, redes, directorios, cámaras del rubro) hasta encontrar el dato concreto que te piden (mail, teléfono, sitio web). Si lo encontrás, escribilo de forma clara y explícita en tu respuesta (ej: "Mail: contacto@empresa.com") para que quede bien guardado. Si después de buscar en serio no lo encontrás, decilo directamente y no inventes ni completes con un dato que no verificaste — nunca completes un mail o teléfono a partir de un patrón adivinado.`;
 }
 
 async function extraerDatos(apiKey, textoRespuesta) {
@@ -100,10 +102,10 @@ module.exports = async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-5",
-        max_tokens: 1024,
+        max_tokens: 1500,
         system: armarSystemPrompt(marcaValida),
         messages: mensajesLimpios,
-        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 5 }]
+        tools: [{ type: "web_search_20250305", name: "web_search", max_uses: 8 }]
       })
     });
 
