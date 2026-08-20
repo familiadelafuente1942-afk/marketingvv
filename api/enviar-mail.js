@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  const { remitente, destinatarios, asunto, cuerpoHtml, adjunto } = req.body || {};
+  const { remitente, destinatarios, asunto, cuerpoHtml, adjunto, responderA } = req.body || {};
   if (!remitente || !Array.isArray(destinatarios) || destinatarios.length === 0 || !asunto || !cuerpoHtml) {
     return res.status(400).json({ error: "Faltan datos: remitente, destinatarios, asunto o cuerpo" });
   }
@@ -36,6 +36,7 @@ module.exports = async function handler(req, res) {
               to: [d.email],
               subject: asunto,
               html: cuerpoHtml,
+              ...(responderA ? { reply_to: responderA } : {}),
               attachments: [{ filename: adjunto.nombre || "adjunto.pdf", content: adjunto.contenidoBase64 }]
             })
           });
@@ -47,7 +48,8 @@ module.exports = async function handler(req, res) {
       }
     } else {
       const lote = destinatarios.map(d => ({
-        from: remitente, to: [d.email], subject: asunto, html: cuerpoHtml
+        from: remitente, to: [d.email], subject: asunto, html: cuerpoHtml,
+        ...(responderA ? { reply_to: responderA } : {})
       }));
       const r = await fetch("https://api.resend.com/emails/batch", {
         method: "POST",
