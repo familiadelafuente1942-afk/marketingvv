@@ -1203,34 +1203,45 @@ function PanelCEO({ metricas, marca }) {
   useEffect(() => {
     setCargandoComms(true);
     (async () => {
+      const datos = {
+        mailsEnviados: 0, mailsEntregados: 0, mailsAbiertos: 0, mailsRebotados: 0, mailsRespuestas: 0,
+        wspConversaciones: 0, wspNecesitaAtencion: 0, wspAgenteActivo: 0,
+        wspEntrantes: 0, wspSalientesAgente: 0, wspSalientesHumano: 0, wspMasivoEnviados: 0
+      };
       try {
-        const [enviados, respuestas, conversaciones, wspMasivo] = await Promise.all([
-          vvFetch(`emails_enviados?marca=eq.${encodeURIComponent(marca)}&select=estado`),
-          vvFetch(`respuestas_recibidas?marca=eq.${encodeURIComponent(marca)}&select=id,reenviado_ok`),
-          vvFetch(`whatsapp_conversaciones?marca=eq.${encodeURIComponent(marca)}&select=id,estado`),
-          vvFetch(`whatsapp_enviados?marca=eq.${encodeURIComponent(marca)}&select=id`)
-        ]);
+        const enviados = await vvFetch(`emails_enviados?marca=eq.${encodeURIComponent(marca)}&select=estado`);
+        datos.mailsEnviados = (enviados || []).length;
+        datos.mailsEntregados = (enviados || []).filter(e => ["entregado", "abierto", "click"].includes(e.estado)).length;
+        datos.mailsAbiertos = (enviados || []).filter(e => ["abierto", "click"].includes(e.estado)).length;
+        datos.mailsRebotados = (enviados || []).filter(e => e.estado === "rebotado").length;
+      } catch (e) { /* seguimos con el resto igual */ }
+
+      try {
+        const respuestas = await vvFetch(`respuestas_recibidas?marca=eq.${encodeURIComponent(marca)}&select=id`);
+        datos.mailsRespuestas = (respuestas || []).length;
+      } catch (e) { /* seguimos con el resto igual */ }
+
+      try {
+        const conversaciones = await vvFetch(`whatsapp_conversaciones?marca=eq.${encodeURIComponent(marca)}&select=id,estado`);
+        datos.wspConversaciones = (conversaciones || []).length;
+        datos.wspNecesitaAtencion = (conversaciones || []).filter(c => c.estado === "necesita_humano").length;
+        datos.wspAgenteActivo = (conversaciones || []).filter(c => c.estado === "agente").length;
         const ids = (conversaciones || []).map(c => c.id);
-        let mensajesWsp = [];
         if (ids.length > 0) {
-          mensajesWsp = await vvFetch(`whatsapp_mensajes?conversacion_id=in.(${ids.join(",")})&select=direccion,remitente`) || [];
+          const mensajesWsp = await vvFetch(`whatsapp_mensajes?conversacion_id=in.(${ids.join(",")})&select=direccion,remitente`) || [];
+          datos.wspEntrantes = mensajesWsp.filter(mm => mm.direccion === "entrante").length;
+          datos.wspSalientesAgente = mensajesWsp.filter(mm => mm.direccion === "saliente" && mm.remitente === "agente").length;
+          datos.wspSalientesHumano = mensajesWsp.filter(mm => mm.direccion === "saliente" && mm.remitente === "humano").length;
         }
-        setComms({
-          mailsEnviados: (enviados || []).length,
-          mailsEntregados: (enviados || []).filter(e => ["entregado", "abierto", "click"].includes(e.estado)).length,
-          mailsAbiertos: (enviados || []).filter(e => ["abierto", "click"].includes(e.estado)).length,
-          mailsRebotados: (enviados || []).filter(e => e.estado === "rebotado").length,
-          mailsRespuestas: (respuestas || []).length,
-          wspConversaciones: (conversaciones || []).length,
-          wspNecesitaAtencion: (conversaciones || []).filter(c => c.estado === "necesita_humano").length,
-          wspAgenteActivo: (conversaciones || []).filter(c => c.estado === "agente").length,
-          wspEntrantes: mensajesWsp.filter(mm => mm.direccion === "entrante").length,
-          wspSalientesAgente: mensajesWsp.filter(mm => mm.direccion === "saliente" && mm.remitente === "agente").length,
-          wspSalientesHumano: mensajesWsp.filter(mm => mm.direccion === "saliente" && mm.remitente === "humano").length,
-          wspMasivoEnviados: (wspMasivo || []).length
-        });
-      } catch (e) { /* silencioso, no bloqueamos el resto del dashboard */ }
-      finally { setCargandoComms(false); }
+      } catch (e) { /* seguimos con el resto igual */ }
+
+      try {
+        const wspMasivo = await vvFetch(`whatsapp_enviados?marca=eq.${encodeURIComponent(marca)}&select=id`);
+        datos.wspMasivoEnviados = (wspMasivo || []).length;
+      } catch (e) { /* seguimos con el resto igual */ }
+
+      setComms(datos);
+      setCargandoComms(false);
     })();
   }, [marca]);
 
