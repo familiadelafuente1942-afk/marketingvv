@@ -2064,7 +2064,7 @@ async function preguntarleAlAsistente(mensajes, marca) {
   return { texto: data.texto, empresas: data.empresas || [], grupos: data.grupos || [] };
 }
 
-function PanelAsistente({ prospectos, campanas, grupos, marca }) {
+function PanelAsistente({ prospectos, campanas, grupos, marca, mensajePendiente, onConsumirPendiente }) {
   const [mensajes, setMensajes] = useState([]); // [{ role: "user"|"assistant", contenido }]
   const [cargandoHistorial, setCargandoHistorial] = useState(true);
   const [prompt, setPrompt] = useState("");
@@ -2079,6 +2079,13 @@ function PanelAsistente({ prospectos, campanas, grupos, marca }) {
   const timeoutSeguridadRef = React.useRef(null);
   const intervaloResumeRef = React.useRef(null);
   const finRef = React.useRef(null);
+
+  useEffect(() => {
+    if (mensajePendiente) {
+      setPrompt(mensajePendiente);
+      if (onConsumirPendiente) onConsumirPendiente();
+    }
+  }, [mensajePendiente]);
 
   const MotorVoz = window.SpeechRecognition || window.webkitSpeechRecognition;
   const soportaDictado = !!MotorVoz;
@@ -2396,7 +2403,80 @@ const ZONAS_PROSPECCION = ["CABA", "GBA Norte", "GBA Oeste", "GBA Sur", "La Plat
 const CATEGORIAS_PROSPECCION_VV = ["estudio de arquitectura", "desarrollador inmobiliario", "gerenciadora de obra", "barrio privado (administración)"];
 const CATEGORIAS_PROSPECCION_DECO = ["estudio de arquitectura", "interiorista", "empresa de decoración"];
 
-function PanelProspeccion({ onData, marca }) {
+function SinMailParaAsistente({ sociosCargados, onEnviarAAsistente }) {
+  const sinMail = (sociosCargados || []).filter(f => !f.email);
+  const [seleccion, setSeleccion] = useState({});
+  const [abierto, setAbierto] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+
+  // por defecto arrancan todos tildados cada vez que cambia la lista de origen
+  useEffect(() => {
+    const t = {};
+    sinMail.forEach(f => { t[f.id] = true; });
+    setSeleccion(t);
+  }, [sociosCargados]);
+
+  if (sinMail.length === 0) return null;
+
+  const elegidos = sinMail.filter(f => seleccion[f.id]);
+
+  function armarTexto() {
+    const lineas = elegidos.map((f, i) =>
+      `${i + 1}) ${f.nombre}${f.zona ? " — " + f.zona : ""}${f.categoria ? " — " + f.categoria : ""}${f.sitio_web ? " — " + f.sitio_web : ""}`
+    );
+    return `Buscame el mail de contacto de estas empresas y cargámelo a cada una:\n\n${lineas.join("\n")}`;
+  }
+
+  function copiar() {
+    navigator.clipboard.writeText(armarTexto()).then(() => {
+      setCopiado(true); setTimeout(() => setCopiado(false), 2000);
+    });
+  }
+
+  function mandarAlAsistente() {
+    if (onEnviarAAsistente) onEnviarAAsistente(armarTexto());
+  }
+
+  function alternar(id) { setSeleccion(s => ({ ...s, [id]: !s[id] })); }
+  function todos() { const t = {}; sinMail.forEach(f => t[f.id] = true); setSeleccion(t); }
+  function ninguno() { setSeleccion({}); }
+
+  return (
+    <Tarjeta style={{ marginBottom: 16 }}>
+      <div onClick={() => setAbierto(v => !v)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>📋 {sinMail.length} sin mail — seleccioná y mandaselos al Asistente</div>
+        <span style={{ color: MUTE, fontSize: 12 }}>{abierto ? "▲" : "▼"}</span>
+      </div>
+      {abierto && (
+        <div style={{ marginTop: 14 }}>
+          <div style={{ display: "flex", gap: 10, marginBottom: 10, fontSize: 11.5 }}>
+            <button onClick={todos} style={{ border: "none", background: "none", color: BRASS, cursor: "pointer" }}>Todos</button>
+            <button onClick={ninguno} style={{ border: "none", background: "none", color: MUTE, cursor: "pointer" }}>Ninguno</button>
+          </div>
+          <div style={{ maxHeight: 220, overflowY: "auto", marginBottom: 14 }}>
+            {sinMail.map(f => (
+              <label key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 4px", fontSize: 12.5, cursor: "pointer" }}>
+                <input type="checkbox" checked={!!seleccion[f.id]} onChange={() => alternar(f.id)} />
+                <span>{f.nombre}{f.zona ? ` — ${f.zona}` : ""}</span>
+              </label>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button onClick={copiar} disabled={elegidos.length === 0} style={{ ...btnNuevo, opacity: elegidos.length === 0 ? 0.6 : 1 }}>
+              {copiado ? "¡Copiado!" : `Copiar lista (${elegidos.length})`}
+            </button>
+            <button onClick={mandarAlAsistente} disabled={elegidos.length === 0 || !onEnviarAAsistente}
+              style={{ ...btnBrass, opacity: (elegidos.length === 0 || !onEnviarAAsistente) ? 0.6 : 1 }}>
+              🤖 Mandar al Asistente ({elegidos.length})
+            </button>
+          </div>
+        </div>
+      )}
+    </Tarjeta>
+  );
+}
+
+function PanelProspeccion({ onData, marca, onEnviarAAsistente }) {
   const CATEGORIAS_PROSPECCION = marca === "VIP Deco & Home" ? CATEGORIAS_PROSPECCION_DECO : CATEGORIAS_PROSPECCION_VV;
   const [zonas, setZonas] = useState(["GBA Sur"]);
   const [categorias, setCategorias] = useState([CATEGORIAS_PROSPECCION[0]]);
@@ -2654,6 +2734,8 @@ function PanelProspeccion({ onData, marca }) {
           </div>
         </Tarjeta>
       )}
+
+      <SinMailParaAsistente sociosCargados={sociosCargados} onEnviarAAsistente={onEnviarAAsistente} />
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
         <button onClick={() => completarMailesFaltantes(sociosCargados)} disabled={completandoTodos} style={{ ...btnNuevo, opacity: completandoTodos ? 0.6 : 1 }}>
@@ -3209,6 +3291,7 @@ function CentroOperaciones() {
   const [autenticado, setAutenticado] = useState(!!tokenGuardado());
   const [rol, setRol] = useState("administrador");
   const [area, setArea] = useState("ceo");
+  const [mensajePendienteAsistente, setMensajePendienteAsistente] = useState("");
   const [marca, setMarca] = useState("V+V Construcciones");
   const [prospectos, setProspectos] = useState([]);
   const [campanas, setCampanas] = useState([]);
@@ -3319,10 +3402,12 @@ function CentroOperaciones() {
           {area === "ceo" && <PanelCEO metricas={metricas} marca={marca} />}
           {area === "comercial" && <PanelComercial onData={setProspectos} marca={marca} rol={rol} />}
           {area === "marketing" && <PanelMarketing onCampanas={setCampanas} onGrupos={setGrupos} marca={marca} />}
-          {area === "prospeccion" && <PanelProspeccion onData={() => {}} marca={marca} />}
+          {area === "prospeccion" && <PanelProspeccion onData={() => {}} marca={marca}
+            onEnviarAAsistente={texto => { setMensajePendienteAsistente(texto); setArea("asistente"); }} />}
           {area === "mails" && <PanelMails marca={marca} />}
           {area === "whatsapp-ia" && <PanelWhatsAppIA marca={marca} />}
-          {area === "asistente" && <PanelAsistente prospectos={prospectosMarca} campanas={campanasMarca} grupos={grupos} marca={marca} />}
+          {area === "asistente" && <PanelAsistente prospectos={prospectosMarca} campanas={campanasMarca} grupos={grupos} marca={marca}
+            mensajePendiente={mensajePendienteAsistente} onConsumirPendiente={() => setMensajePendienteAsistente("")} />}
           {area === "diseno" && <PanelDiseno />}
         </LimiteDeError>
       </div>
