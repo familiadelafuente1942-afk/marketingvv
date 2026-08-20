@@ -346,6 +346,8 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [nuevo, setNuevo] = useState(false);
+  const [editando, setEditando] = useState(null);
+  const [borrador, setBorrador] = useState({});
   const vacio = campos.reduce((acc, c) => ({ ...acc, [c.key]: (filtro && filtro.campo === c.key) ? filtro.valor : c.tipo === "number" ? 0 : c.tipo === "select" ? c.opciones[0] : "" }), estadoCampo ? { [estadoCampo]: estadoOpciones[0] } : {});
   const [f, setF] = useState(vacio);
 
@@ -396,6 +398,29 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
     } catch (e) { setError(e.message); }
   }
 
+  function empezarEdicion(x) {
+    const d = {};
+    campos.forEach(c => { d[c.key] = x[c.key] ?? ""; });
+    setBorrador(d);
+    setEditando(x.id);
+  }
+
+  function cancelarEdicion() {
+    setEditando(null);
+    setBorrador({});
+  }
+
+  async function guardarEdicion(id) {
+    try {
+      await vvFetch(`${tabla}?id=eq.${id}`, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify(borrador) });
+      const nuevas = filas.map(x => x.id === id ? { ...x, ...borrador } : x);
+      setFilas(nuevas);
+      if (onData) onData(nuevas);
+      setEditando(null);
+      setBorrador({});
+    } catch (e) { setError(e.message); }
+  }
+
   const filasVisibles = filtro ? filas.filter(x => x[filtro.campo] === filtro.valor) : filas;
 
   return (
@@ -433,8 +458,23 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
             </tr></thead>
             <tbody>
               {filasVisibles.map(x => (
-                <tr key={x.id}>
+                <tr key={x.id} style={editando === x.id ? { background: FONDO } : null}>
                   {campos.map(c => {
+                    if (editando === x.id) {
+                      return (
+                        <td key={c.key} style={td}>
+                          {c.tipo === "select" ? (
+                            <select value={borrador[c.key]} onChange={e => setBorrador({ ...borrador, [c.key]: e.target.value })}
+                              style={{ fontSize: 12, padding: "5px 6px", borderRadius: 6, border: `1px solid ${BORDER}`, width: "100%" }}>
+                              {c.opciones.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                          ) : (
+                            <input value={borrador[c.key]} onChange={e => setBorrador({ ...borrador, [c.key]: e.target.value })}
+                              style={{ fontSize: 12, padding: "5px 6px", borderRadius: 6, border: `1px solid ${BORDER}`, width: "100%", minWidth: 90 }} />
+                          )}
+                        </td>
+                      );
+                    }
                     const valor = x[c.key];
                     let contenido = valor || "—";
                     if (valor && c.key === "sitio_web") {
@@ -467,9 +507,17 @@ function ListaGenerica({ tabla, campos, estadoCampo, estadoOpciones, colorEstado
                       </select>
                     </td>
                   )}
-                  <td style={td}>
-                    {accionesExtra && accionesExtra(x)}
-                    <button onClick={() => borrar(x.id)} style={{ border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 }}>Borrar</button>
+                  <td style={{ ...td, whiteSpace: "nowrap" }}>
+                    {editando === x.id ? (
+                      <>
+                        <button onClick={() => guardarEdicion(x.id)} style={{ border: "none", background: "none", color: "#2F7A4F", cursor: "pointer", fontSize: 11.5, fontWeight: 700, marginRight: 10 }}>Guardar</button>
+                        <button onClick={cancelarEdicion} style={{ border: "none", background: "none", color: MUTE, cursor: "pointer", fontSize: 11.5, marginRight: 10 }}>Cancelar</button>
+                      </>
+                    ) : (
+                      <button onClick={() => empezarEdicion(x)} style={{ border: "none", background: "none", color: BRASS, cursor: "pointer", fontSize: 11.5, marginRight: 10 }}>Editar</button>
+                    )}
+                    {editando !== x.id && accionesExtra && accionesExtra(x)}
+                    {editando !== x.id && <button onClick={() => borrar(x.id)} style={{ border: "none", background: "none", color: "#B3261E", cursor: "pointer", fontSize: 11.5 }}>Borrar</button>}
                   </td>
                 </tr>
               ))}
