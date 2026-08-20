@@ -2403,16 +2403,18 @@ const ZONAS_PROSPECCION = ["CABA", "GBA Norte", "GBA Oeste", "GBA Sur", "La Plat
 const CATEGORIAS_PROSPECCION_VV = ["estudio de arquitectura", "desarrollador inmobiliario", "gerenciadora de obra", "barrio privado (administración)"];
 const CATEGORIAS_PROSPECCION_DECO = ["estudio de arquitectura", "interiorista", "empresa de decoración"];
 
-function SinMailParaAsistente({ sociosCargados, onEnviarAAsistente }) {
+function SinMailParaAsistente({ sociosCargados, onEnviarAAsistente, onActualizar }) {
   const sinMail = (sociosCargados || []).filter(f => !f.email);
   const [seleccion, setSeleccion] = useState({});
   const [abierto, setAbierto] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [tamañoTanda, setTamañoTanda] = useState(15);
 
-  // por defecto arrancan todos tildados cada vez que cambia la lista de origen
+  // por defecto, tildamos solo la primera tanda (no las 300 de una) — así el mensaje
+  // al Asistente queda en un tamaño manejable para una sola conversación
   useEffect(() => {
     const t = {};
-    sinMail.forEach(f => { t[f.id] = true; });
+    sinMail.slice(0, tamañoTanda).forEach(f => { t[f.id] = true; });
     setSeleccion(t);
   }, [sociosCargados]);
 
@@ -2438,21 +2440,36 @@ function SinMailParaAsistente({ sociosCargados, onEnviarAAsistente }) {
   }
 
   function alternar(id) { setSeleccion(s => ({ ...s, [id]: !s[id] })); }
+  function seleccionarTanda() {
+    const t = {};
+    sinMail.slice(0, tamañoTanda).forEach(f => t[f.id] = true);
+    setSeleccion(t);
+  }
   function todos() { const t = {}; sinMail.forEach(f => t[f.id] = true); setSeleccion(t); }
   function ninguno() { setSeleccion({}); }
 
   return (
     <Tarjeta style={{ marginBottom: 16 }}>
       <div onClick={() => setAbierto(v => !v)} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>📋 {sinMail.length} sin mail — seleccioná y mandaselos al Asistente</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: NAVY }}>📋 {sinMail.length} sin mail — trabajalos de a tandas con el Asistente</div>
         <span style={{ color: MUTE, fontSize: 12 }}>{abierto ? "▲" : "▼"}</span>
       </div>
       {abierto && (
         <div style={{ marginTop: 14 }}>
-          <div style={{ display: "flex", gap: 10, marginBottom: 10, fontSize: 11.5 }}>
-            <button onClick={todos} style={{ border: "none", background: "none", color: BRASS, cursor: "pointer" }}>Todos</button>
+          <div style={{ display: "flex", gap: 10, marginBottom: 10, fontSize: 11.5, alignItems: "center", flexWrap: "wrap" }}>
+            <span style={{ color: MUTE }}>Tanda de</span>
+            <input type="number" min={1} max={50} value={tamañoTanda} onChange={e => setTamañoTanda(Math.max(1, Math.min(50, Number(e.target.value) || 1)))}
+              style={{ width: 52, padding: "4px 6px", borderRadius: 6, border: `1px solid ${BORDER}`, fontSize: 12 }} />
+            <button onClick={seleccionarTanda} style={{ border: "none", background: "none", color: BRASS, cursor: "pointer" }}>Seleccionar próxima tanda</button>
+            <button onClick={todos} style={{ border: "none", background: "none", color: MUTE, cursor: "pointer" }}>Todos ({sinMail.length})</button>
             <button onClick={ninguno} style={{ border: "none", background: "none", color: MUTE, cursor: "pointer" }}>Ninguno</button>
+            {onActualizar && <button onClick={onActualizar} style={{ border: "none", background: "none", color: "#2F7A4F", cursor: "pointer", marginLeft: "auto" }}>🔄 Actualizar lista</button>}
           </div>
+          {tamañoTanda < sinMail.length && (
+            <div style={{ fontSize: 11, color: MUTE, marginBottom: 10 }}>
+              Mandar todas las {sinMail.length} de una puede ser demasiado para una sola conversación del Asistente — mejor de a tandas de {tamañoTanda}, y volvés a "Actualizar lista" + "Mandar" para la siguiente tanda.
+            </div>
+          )}
           <div style={{ maxHeight: 220, overflowY: "auto", marginBottom: 14 }}>
             {sinMail.map(f => (
               <label key={f.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 4px", fontSize: 12.5, cursor: "pointer" }}>
@@ -2735,7 +2752,7 @@ function PanelProspeccion({ onData, marca, onEnviarAAsistente }) {
         </Tarjeta>
       )}
 
-      <SinMailParaAsistente sociosCargados={sociosCargados} onEnviarAAsistente={onEnviarAAsistente} />
+      <SinMailParaAsistente sociosCargados={sociosCargados} onEnviarAAsistente={onEnviarAAsistente} onActualizar={() => setRefrescar(r => r + 1)} />
 
       <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
         <button onClick={() => completarMailesFaltantes(sociosCargados)} disabled={completandoTodos} style={{ ...btnNuevo, opacity: completandoTodos ? 0.6 : 1 }}>
